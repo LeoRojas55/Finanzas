@@ -467,18 +467,52 @@ select.form-input option{background:var(--bg3);}
 
     <!-- RESUMEN ANUAL -->
     <section class="page" id="page-resumen">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title"><i class="ph ph-trend-up"></i>Proyección anual</span>
+      <!-- Tab switcher -->
+      <div class="card" style="padding:6px 8px;">
+        <div style="display:flex;gap:4px;">
+          <button id="res-tab-anual" onclick="switchResTab('anual')" style="flex:1;padding:8px 4px;border-radius:8px;font-size:11px;font-weight:700;background:var(--brand);color:#fff;border:none;cursor:pointer;">📊 Anual</button>
+          <button id="res-tab-mes" onclick="switchResTab('mes')" style="flex:1;padding:8px 4px;border-radius:8px;font-size:11px;font-weight:700;background:var(--bg3);color:var(--text2);border:none;cursor:pointer;" id="res-tab-mes">📅 <span id="res-tab-mes-label">Mes</span></button>
         </div>
-        <div class="chart-wrap" style="height:200px"><canvas id="chart-anual"></canvas></div>
       </div>
-      <div class="card" style="margin-top:10px;">
-        <div class="card-header">
-          <span class="card-title"><i class="ph ph-table"></i>Resumen por mes</span>
-          <button class="btn-export" onclick="openExportModal()"><i class="ph ph-export"></i>Exportar</button>
+
+      <!-- Vista Anual -->
+      <div id="res-view-anual">
+        <div class="card" style="margin-top:10px;">
+          <div class="card-header">
+            <span class="card-title"><i class="ph ph-trend-up"></i>Proyección anual</span>
+          </div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-anual"></canvas></div>
         </div>
-        <div style="overflow-x:auto;"><div id="resumen-tabla"></div></div>
+        <div class="card" style="margin-top:10px;">
+          <div class="card-header">
+            <span class="card-title"><i class="ph ph-table"></i>Resumen por mes</span>
+            <button class="btn-export" onclick="openExportModal()"><i class="ph ph-export"></i>Exportar</button>
+          </div>
+          <div style="overflow-x:auto;"><div id="resumen-tabla"></div></div>
+        </div>
+      </div>
+
+      <!-- Vista Mes -->
+      <div id="res-view-mes" style="display:none;">
+        <div class="card" style="margin-top:10px;">
+          <div class="card-header">
+            <span class="card-title"><i class="ph ph-calendar-check"></i>Resumen de <span id="res-mes-nombre"></span></span>
+            <button class="btn-export" onclick="openExportModal()"><i class="ph ph-export"></i>Exportar</button>
+          </div>
+          <div id="res-mes-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;"></div>
+        </div>
+        <div class="card" style="margin-top:10px;">
+          <div class="card-header"><span class="card-title"><i class="ph ph-chart-pie"></i>Gastos variables por categoría</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-mes-donut"></canvas></div>
+        </div>
+        <div class="card" style="margin-top:10px;">
+          <div class="card-header"><span class="card-title"><i class="ph ph-chart-bar"></i>Ingresos vs Gastos</span></div>
+          <div class="chart-wrap" style="height:160px"><canvas id="chart-mes-bar"></canvas></div>
+        </div>
+        <div class="card" style="margin-top:10px;">
+          <div class="card-header"><span class="card-title"><i class="ph ph-list-bullets"></i>Detalle gastos variables</span></div>
+          <div id="res-mes-lista"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -555,10 +589,12 @@ select.form-input option{background:var(--bg3);}
     <div class="form-row" style="margin-bottom:13px;">
       <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-calendar"></i>Mes</label><select class="form-input" id="var-mes"></select></div>
       <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-tag"></i>Categoría</label>
-        <select class="form-input" id="var-cat">
-          <option>Almuerzo</option><option>Mercado</option><option>Medicamentos</option><option>Leo</option><option>Mamá</option><option>Veterinario</option><option>Spark</option><option>Gasolina</option><option>Villa de Leyva</option><option>Otros</option>
-        </select>
+        <select class="form-input" id="var-cat" onchange="onCatChange(this)"></select>
       </div>
+    </div>
+    <div id="nueva-cat-box" style="display:none;margin-bottom:13px;">
+      <label class="form-label"><i class="ph ph-plus-circle"></i>Nombre de la nueva categoría</label>
+      <input class="form-input" type="text" id="nueva-cat-nombre" placeholder="Ej: Ropa, Transporte..." oninput="this.value=this.value.toUpperCase().substring(0,1)+this.value.substring(1)">
     </div>
     <div class="form-section"><label class="form-label"><i class="ph ph-calendar-check"></i>Fecha del gasto</label><input class="form-input" type="date" id="var-fecha"></div>
     <div class="form-section"><label class="form-label"><i class="ph ph-currency-circle-dollar"></i>Valor</label><input class="form-input" type="number" id="var-valor" placeholder="0"></div>
@@ -764,38 +800,44 @@ select.form-input option{background:var(--bg3);}
   <div class="sub-body">
     <div style="text-align:center;padding:20px 0 14px;">
       <i class="ph-fill ph-google-sheets-logo" style="font-size:56px;color:#1d6f42;display:block;margin-bottom:10px;"></i>
-      <p style="font-size:15px;font-weight:700;margin-bottom:4px;">Conecta Google Sheets</p>
-      <p style="font-size:12px;color:var(--text3);">Sincroniza todos tus datos automáticamente en una hoja de cálculo</p>
+      <p id="sheets-conn-status" style="font-size:13px;font-weight:700;margin-bottom:4px;">Configura tu hoja</p>
+      <p style="font-size:11px;color:var(--text3);">Lee y escribe en tu Google Sheet directamente</p>
     </div>
     <div class="card" style="margin-bottom:10px;">
-      <div class="card-header"><span class="card-title"><i class="ph ph-link"></i>URL de la hoja</span></div>
+      <div class="card-header"><span class="card-title"><i class="ph ph-identification-card"></i>ID del spreadsheet</span></div>
       <div class="form-section">
-        <label class="form-label"><i class="ph ph-google-sheets-logo"></i>URL de Google Sheets</label>
-        <input class="form-input" type="url" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+        <label class="form-label">ID de la hoja (de la URL)</label>
+        <input class="form-input" type="text" id="sheets-id" placeholder="1WkPyMuhlg..." value="">
       </div>
       <div class="form-section">
-        <label class="form-label"><i class="ph ph-key"></i>Clave API (Google Sheets)</label>
-        <input class="form-input" type="password" id="sheets-key" placeholder="AIza...">
+        <label class="form-label"><i class="ph ph-key"></i>Google API Key <span style="color:var(--text3);font-weight:400;">(para leer datos)</span></label>
+        <input class="form-input" type="password" id="sheets-api-key" placeholder="AIzaSy...">
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Crea una en <strong>console.cloud.google.com</strong> → APIs → Sheets API → Credenciales</div>
       </div>
-      <div class="form-section">
-        <label class="form-label"><i class="ph ph-identification-card"></i>ID del spreadsheet</label>
-        <input class="form-input" type="text" id="sheets-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+      <button class="btn-primary" onclick="connectSheets()"><i class="ph ph-plug"></i>Guardar configuración</button>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-header"><span class="card-title"><i class="ph ph-arrows-clockwise"></i>Sincronización</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0;">
+        <button class="btn-primary" style="background:linear-gradient(135deg,#1d6f42,#2da161);" onclick="loadFromSheets()">
+          <i class="ph ph-download-simple"></i>Cargar datos desde Sheets
+        </button>
+        <button class="btn-primary" onclick="syncToSheets()">
+          <i class="ph ph-upload-simple"></i>Guardar datos en Sheets
+        </button>
       </div>
-      <button class="btn-primary" onclick="connectSheets()"><i class="ph ph-plug"></i>Conectar</button>
+      <div id="sheets-sync-log" style="margin-top:10px;font-size:10px;color:var(--text3);line-height:1.8;display:none;"></div>
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title"><i class="ph ph-info"></i>¿Cómo funciona?</span></div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
-        <p style="margin-bottom:7px;">1. Crea una hoja en <strong>Google Sheets</strong></p>
-        <p style="margin-bottom:7px;">2. En <strong>Extensiones → Apps Script</strong>, habilita la API</p>
-        <p style="margin-bottom:7px;">3. Pega la URL y el ID de tu hoja aquí</p>
-        <p style="margin-bottom:7px;">4. Cada cambio se sincroniza automáticamente</p>
-        <p style="color:var(--text3);">La hoja se crea con pestañas: <em>Ingresos, Gastos Fijos, Gastos Variables, Proyección</em></p>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+        <p>• <strong>Cargar desde Sheets</strong> lee tus datos existentes y los importa a la app</p>
+        <p>• <strong>Guardar en Sheets</strong> escribe los datos de la app en tu hoja</p>
+        <p>• La hoja debe tener las pestañas de categoría con la estructura: filas por día, columnas por mes (VALOR / DESCRIPCION)</p>
+        <p>• Si creas una categoría nueva en la app, se crea automáticamente como pestaña nueva en Sheets</p>
+        <p style="margin-top:6px;color:var(--accent);">⚠ Necesitas una API Key con permisos de lectura/escritura en Google Sheets</p>
       </div>
     </div>
-    <button class="btn-primary" style="background:linear-gradient(135deg,#1d6f42,#2da161);" onclick="syncToSheets()">
-      <i class="ph ph-arrows-clockwise"></i>Sincronizar ahora
-    </button>
   </div>
 </div>
 
@@ -807,15 +849,26 @@ select.form-input option{background:var(--bg3);}
 //  STATE & CONSTANTS
 // ═══════════════════════════════════════════════════
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const CATS=['Almuerzo','Mercado','Mamá','Leo','Medicamentos','Veterinario','Spark','Gasolina','Villa de Leyva','Otros'];
-const CAT_COLORS=['#06b6d4','#0e7490','#f97316','#9b7ff4','#22d3ee','#fdba74','#e91e8c','#f59e0b','#34d399','#94a3b8'];
-const CAT_ICONS=['ph-fork-knife','ph-shopping-cart-simple','ph-heart','ph-graduation-cap','ph-first-aid','ph-paw-print','ph-car','ph-gas-pump','ph-map-pin','ph-dots-three-circle'];
+const MESES_SHEETS=['ENERO','FEBERERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+// Mapeo de nombre de pestaña en Sheets → nombre en app
+const SHEET_TAB_MAP={'ALMUERZO':'Almuerzo','CENA':'Cena','MERCADO':'Mercado','GASOLINA':'Gasolina','MEDICAMENTOS':'Medicamentos','LEO':'Leo','VETERINARIO':'Veterinario','SPARK':'Spark','MAMÁ':'Mamá','R4':'R4','VILLA':'Villa','OTROS':'Otros','chuchu':'Chuchu','INGRESOS':'Ingresos'};
+const SHEET_ID='1WkPyMuhlgQBqHvYbowHZQOSt1wUi1pH8';
+let CATS=['Almuerzo','Mercado','Mamá','Leo','Medicamentos','Veterinario','Spark','Gasolina','Villa','Otros'];
+let CAT_COLORS=['#06b6d4','#0e7490','#f97316','#9b7ff4','#22d3ee','#fdba74','#e91e8c','#f59e0b','#34d399','#94a3b8'];
+let CAT_ICONS=['ph-fork-knife','ph-shopping-cart-simple','ph-heart','ph-graduation-cap','ph-first-aid','ph-paw-print','ph-car','ph-gas-pump','ph-map-pin','ph-dots-three-circle'];
+const CAT_COLOR_POOL=['#06b6d4','#0e7490','#f97316','#9b7ff4','#22d3ee','#fdba74','#e91e8c','#f59e0b','#34d399','#94a3b8','#ef4444','#84cc16','#a78bfa','#fb923c','#2dd4bf'];
+function catColor(i){return CAT_COLOR_POOL[i%CAT_COLOR_POOL.length];}
+function syncCatArrays(){
+  while(CAT_COLORS.length<CATS.length)CAT_COLORS.push(catColor(CAT_COLORS.length));
+  while(CAT_ICONS.length<CATS.length)CAT_ICONS.push('ph-tag');
+}
 
 const DEF_STATE={
   mesActivo:5,currentPage:'dashboard',
   theme:'dark',
   profile:{nombre:'',email:'',tel:'',ciudad:'Tunja',moneda:'COP'},
-  sheets:{url:'',key:'',id:'',connected:false},
+  sheets:{url:'',key:'',id:'1WkPyMuhlgQBqHvYbowHZQOSt1wUi1pH8',connected:false,apiKey:''},
+  customCats:[],
   ingresos:[
     {id:1,mes:0,valor:2151640,desc:'05 de enero'},{id:2,mes:0,valor:1600000,desc:'13 de enero'},{id:3,mes:0,valor:130000,desc:'3 de febrero'},{id:4,mes:0,valor:-260000,desc:'Descuento diciembre'},{id:5,mes:0,valor:-270880,desc:'Devolución febrero'},
     {id:6,mes:1,valor:270880,desc:'Pago'},{id:7,mes:1,valor:3500000,desc:'Principal'},{id:8,mes:1,valor:-522772,desc:'Descuento marzo'},
@@ -1041,7 +1094,13 @@ function renderPage(p){
   else if(p==='ingresos')renderIng();
   else if(p==='fijos')renderFij();
   else if(p==='variables')renderVar();
-  else if(p==='resumen')renderRes();
+  else if(p==='resumen'){
+    const lbl=document.getElementById('res-tab-mes-label');
+    if(lbl)lbl.textContent=MESES[S.mesActivo].substring(0,3);
+    const mesView=document.getElementById('res-view-mes');
+    if(mesView&&mesView.style.display!=='none')renderResMes();
+    else renderRes();
+  }
   else if(p==='calendario'){calState={year:new Date().getFullYear(),month:new Date().getMonth()};renderCalendario();}
 }
 
@@ -1297,6 +1356,81 @@ function renderVar(){
 // ═══════════════════════════════════════════════════
 //  RESUMEN ANUAL
 // ═══════════════════════════════════════════════════
+function switchResTab(tab){
+  const isAnual=tab==='anual';
+  document.getElementById('res-view-anual').style.display=isAnual?'block':'none';
+  document.getElementById('res-view-mes').style.display=isAnual?'none':'block';
+  document.getElementById('res-tab-anual').style.background=isAnual?'var(--brand)':'var(--bg3)';
+  document.getElementById('res-tab-anual').style.color=isAnual?'#fff':'var(--text2)';
+  document.getElementById('res-tab-mes').style.background=isAnual?'var(--bg3)':'var(--brand)';
+  document.getElementById('res-tab-mes').style.color=isAnual?'var(--text2)':'#fff';
+  if(!isAnual)renderResMes();
+}
+
+function renderResMes(){
+  const m=S.mesActivo;
+  const ing=ingM(m),fij=fijM(m),vrb=varM(m),gas=fij+vrb,sal=ing-gas;
+  document.getElementById('res-mes-nombre').textContent=MESES[m];
+  document.getElementById('res-tab-mes-label').textContent=MESES[m].substring(0,3);
+
+  // KPIs
+  const kpis=[
+    {icon:'ph-trend-up',label:'Ingresos',val:ing,col:'var(--brand)'},
+    {icon:'ph-house',label:'Gastos fijos',val:fij,col:'var(--text2)'},
+    {icon:'ph-shopping-cart',label:'Gastos variables',val:vrb,col:'var(--accent)'},
+    {icon:'ph-wallet',label:'Saldo',val:sal,col:sal>=0?'var(--brand-light)':'var(--accent)'},
+  ];
+  document.getElementById('res-mes-kpis').innerHTML=kpis.map(k=>`
+    <div style="background:var(--bg3);border-radius:12px;padding:12px;border:1px solid var(--border);">
+      <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:4px;"><i class="ph ${k.icon}"></i> ${k.label}</div>
+      <div style="font-size:18px;font-weight:700;color:${k.col};">${fmt(k.val)}</div>
+    </div>`).join('');
+
+  // Donut chart — gastos variables por categoría
+  if(charts.mesDonut)charts.mesDonut.destroy();
+  const filtered=CATS.map((c,i)=>({c,v:S.gastosVariables.filter(g=>g.mes===m&&g.cat===c).reduce((a,b)=>a+b.valor,0),col:CAT_COLORS[i]})).filter(x=>x.v>0);
+  if(filtered.length){
+    charts.mesDonut=new Chart(document.getElementById('chart-mes-donut'),{
+      type:'doughnut',
+      data:{labels:filtered.map(x=>x.c),datasets:[{data:filtered.map(x=>x.v),backgroundColor:filtered.map(x=>x.col+'cc'),borderColor:filtered.map(x=>x.col),borderWidth:2,hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{
+        legend:{position:'right',labels:{color:tickColor(),font:{size:9,weight:'600'},boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmt(ctx.raw)}}
+      }}
+    });
+  } else {
+    document.getElementById('chart-mes-donut').parentElement.innerHTML='<div class="empty-state" style="padding:20px 0;"><i class="ph ph-chart-pie" style="font-size:32px;"></i><p>Sin gastos variables este mes</p></div>';
+  }
+
+  // Bar chart — ingresos vs gastos
+  if(charts.mesBar)charts.mesBar.destroy();
+  charts.mesBar=new Chart(document.getElementById('chart-mes-bar'),{
+    type:'bar',
+    data:{labels:['Ingresos','Gastos fijos','Gastos var.','Total gastos','Saldo'],
+      datasets:[{data:[ing,fij,vrb,gas,sal],backgroundColor:['rgba(6,182,212,0.7)','rgba(224,242,254,0.4)','rgba(249,115,22,0.7)','rgba(253,186,116,0.7)',sal>=0?'rgba(52,211,153,0.7)':'rgba(249,115,22,0.9)'],borderRadius:6,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{color:tickColor(),font:{size:9,weight:'600'}}},y:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:9},callback:v=>'$'+Math.round(v/1000)+'K'}}}}
+  });
+
+  // Lista detalle variables
+  const vars=S.gastosVariables.filter(g=>g.mes===m).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const pend=S.gastosFijos.filter(f=>gPago(m,f.id)==='pendiente'&&f.valor>0);
+  let listaHTML='';
+  if(pend.length){
+    listaHTML+=`<div class="section-label" style="color:var(--accent);"><i class="ph ph-warning-circle"></i>Pendientes de pago (${pend.length})</div>`;
+    listaHTML+=pend.map(f=>`<div class="list-item"><div class="item-icon" style="background:rgba(249,115,22,0.12);"><i class="ph-fill ph-house" style="font-size:18px;color:var(--accent);"></i></div><div class="item-body"><div class="item-name">${f.item}</div><div class="item-sub">${f.ubi}${f.diaLimite?' · día '+f.diaLimite:''}</div></div><div class="item-right"><div class="item-amount" style="color:var(--accent);">${fmt(f.valor)}</div></div></div>`).join('');
+  }
+  if(vars.length){
+    listaHTML+=`<div class="section-label"><i class="ph ph-receipt"></i>Gastos variables (${vars.length})</div>`;
+    listaHTML+=vars.map(g=>{
+      const ci=CATS.indexOf(g.cat),col=CAT_COLORS[ci]||'#888',icon=CAT_ICONS[ci]||'ph-tag';
+      return`<div class="list-item"><div class="item-icon" style="background:${col}1a;"><i class="ph-fill ${icon}" style="font-size:18px;color:${col};"></i></div><div class="item-body"><div class="item-name">${g.desc||g.cat}</div><div class="item-sub"><i class="ph ph-tag"></i>${g.cat}${g.fecha?` · ${g.fecha.substring(8,10)}/${g.fecha.substring(5,7)}`:''}</div></div><div class="item-right"><div class="item-amount c-accent">${fmt(g.valor)}</div></div></div>`;
+    }).join('');
+  }
+  if(!listaHTML)listaHTML='<div class="empty-state" style="padding:16px 0;"><i class="ph ph-receipt" style="font-size:28px;"></i><p>Sin actividad este mes</p></div>';
+  document.getElementById('res-mes-lista').innerHTML=listaHTML;
+}
+
 function renderRes(){
   if(charts.anual)charts.anual.destroy();
   charts.anual=new Chart(document.getElementById('chart-anual'),{
@@ -1358,17 +1492,51 @@ let eVarId=null;
 function todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function openVarModal(id=null){
   eVarId=id;populateMes('var-mes');
+  // Populate categories dynamically
+  if(S.customCats)S.customCats.forEach(c=>{if(!CATS.includes(c)){CATS.push(c);CAT_COLORS.push(catColor(CATS.length-1));CAT_ICONS.push('ph-tag');}});
   const del=document.getElementById('var-del-btn');
-  if(id!==null){const it=S.gastosVariables.find(x=>x.id===id);document.getElementById('var-modal-title').innerHTML='<i class="ph ph-pencil-simple"></i>Editar gasto';document.getElementById('var-mes').value=it.mes;document.getElementById('var-cat').value=it.cat;document.getElementById('var-valor').value=it.valor;document.getElementById('var-desc').value=it.desc;document.getElementById('var-fecha').value=it.fecha||todayStr();del.style.display='flex';}
-  else{document.getElementById('var-modal-title').innerHTML='<i class="ph ph-shopping-cart"></i>Nuevo gasto';document.getElementById('var-valor').value='';document.getElementById('var-desc').value='';document.getElementById('var-fecha').value=todayStr();del.style.display='none';}
+  document.getElementById('nueva-cat-box').style.display='none';
+  if(id!==null){
+    const it=S.gastosVariables.find(x=>x.id===id);
+    document.getElementById('var-modal-title').innerHTML='<i class="ph ph-pencil-simple"></i>Editar gasto';
+    document.getElementById('var-mes').value=it.mes;
+    populateCatSelect(document.getElementById('var-cat'),it.cat);
+    document.getElementById('var-valor').value=it.valor;
+    document.getElementById('var-desc').value=it.desc;
+    document.getElementById('var-fecha').value=it.fecha||todayStr();
+    del.style.display='flex';
+  } else {
+    document.getElementById('var-modal-title').innerHTML='<i class="ph ph-shopping-cart"></i>Nuevo gasto';
+    populateCatSelect(document.getElementById('var-cat'));
+    document.getElementById('var-valor').value='';
+    document.getElementById('var-desc').value='';
+    document.getElementById('var-fecha').value=todayStr();
+    del.style.display='none';
+  }
   openModal('var-modal');
 }
 function editVariable(id){openVarModal(id);}
 function saveVariable(){
-  const mes=parseInt(document.getElementById('var-mes').value),cat=document.getElementById('var-cat').value,valor=parseFloat(document.getElementById('var-valor').value)||0,desc=document.getElementById('var-desc').value.trim(),fecha=document.getElementById('var-fecha').value||todayStr();
+  const mes=parseInt(document.getElementById('var-mes').value);
+  let cat=document.getElementById('var-cat').value;
+  const valor=parseFloat(document.getElementById('var-valor').value)||0;
+  const desc=document.getElementById('var-desc').value.trim();
+  const fecha=document.getElementById('var-fecha').value||todayStr();
+  if(cat==='__nueva__'){
+    const nombre=document.getElementById('nueva-cat-nombre').value.trim();
+    if(!nombre){toast('Escribe el nombre de la nueva categoría','ph-warning');return;}
+    cat=addNewCat(nombre);
+    toast(`Categoría "${cat}" creada ✓`,'ph-plus-circle');
+  }
   if(!valor){toast('Ingresa un valor','ph-warning');return;}
-  if(eVarId!==null){const it=S.gastosVariables.find(x=>x.id===eVarId);it.mes=mes;it.cat=cat;it.valor=valor;it.desc=desc;it.fecha=fecha;toast('Gasto actualizado','ph-check-circle');}
-  else{S.gastosVariables.push({id:nid(),mes,cat,valor,desc,fecha});toast('Gasto registrado','ph-check-circle');}
+  if(eVarId!==null){
+    const it=S.gastosVariables.find(x=>x.id===eVarId);
+    it.mes=mes;it.cat=cat;it.valor=valor;it.desc=desc;it.fecha=fecha;
+    toast('Gasto actualizado','ph-check-circle');
+  } else {
+    S.gastosVariables.push({id:nid(),mes,cat,valor,desc,fecha});
+    toast('Gasto registrado','ph-check-circle');
+  }
   save();closeModal('var-modal');renderVar();syncToSheets(true);
 }
 function confirmDelVar(id){eVarId=id;deleteVariable();}
@@ -1456,81 +1624,135 @@ async function exportExcel(){
   const p=S.profile;
   const nombre=p.nombre||'Finanzas Personal';
 
-  // ── Hoja 1: Resumen / Proyección anual ──
-  const proj=[
-    [`RESUMEN ANUAL ${year} · ${nombre}`,'','','','',''],
-    [`Generado: ${new Date().toLocaleDateString('es-CO')}`,'','','','',''],
-    [''],
-    ['MES','INGRESOS','GASTOS FIJOS','GASTOS VARIABLES','TOTAL GASTOS','SALDO']
-  ];
+  const ST={
+    titulo:{font:{bold:true,sz:14,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'0B3D6B'}},alignment:{horizontal:'center',vertical:'center'},border:{bottom:{style:'medium',color:{rgb:'06B6D4'}}}},
+    subtitulo:{font:{bold:true,sz:10,color:{rgb:'22D3EE'}},fill:{fgColor:{rgb:'0E2A45'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'06B6D4'}}}},
+    mesHeader:{font:{bold:true,sz:11,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'0E4C75'}},border:{top:{style:'medium',color:{rgb:'06B6D4'}},bottom:{style:'thin',color:{rgb:'06B6D4'}},left:{style:'medium',color:{rgb:'06B6D4'}},right:{style:'medium',color:{rgb:'06B6D4'}}},alignment:{horizontal:'center'}},
+    colHeader:{font:{bold:true,sz:9,color:{rgb:'7ECFE8'}},fill:{fgColor:{rgb:'0A2438'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'1E5F80'}}}},
+    dato:{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:{rgb:'0D2D45'}},alignment:{horizontal:'right'},border:{left:{style:'thin',color:{rgb:'1E3D55'}},right:{style:'thin',color:{rgb:'1E3D55'}}}},
+    datoLabel:{font:{sz:9,color:{rgb:'BAE6FD'}},fill:{fgColor:{rgb:'0D2D45'}},border:{left:{style:'medium',color:{rgb:'06B6D4'}}}},
+    datoRight:{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:{rgb:'0D2D45'}},alignment:{horizontal:'right'},border:{right:{style:'medium',color:{rgb:'06B6D4'}}}},
+    total:{font:{bold:true,sz:10,color:{rgb:'F97316'}},fill:{fgColor:{rgb:'0B2035'}},alignment:{horizontal:'right'},border:{top:{style:'medium',color:{rgb:'F97316'}},bottom:{style:'medium',color:{rgb:'F97316'}},left:{style:'thin',color:{rgb:'1E3D55'}},right:{style:'thin',color:{rgb:'1E3D55'}}}},
+    totalLabel:{font:{bold:true,sz:10,color:{rgb:'F97316'}},fill:{fgColor:{rgb:'0B2035'}},border:{top:{style:'medium',color:{rgb:'F97316'}},bottom:{style:'medium',color:{rgb:'F97316'}},left:{style:'medium',color:{rgb:'06B6D4'}}}},
+    totalRight:{font:{bold:true,sz:10,color:{rgb:'F97316'}},fill:{fgColor:{rgb:'0B2035'}},alignment:{horizontal:'right'},border:{top:{style:'medium',color:{rgb:'F97316'}},bottom:{style:'medium',color:{rgb:'F97316'}},right:{style:'medium',color:{rgb:'06B6D4'}}}},
+    vacio:{fill:{fgColor:{rgb:'08192E'}}},
+  };
+  function cell(v,s){return{v,s,t:typeof v==='number'?'n':'s'};}
+  function numFmt(v,s){return{v,s,t:'n',z:'#,##0'};}
+  function setCell(ws,r,c,val){const addr=XLSX.utils.encode_cell({r,c});ws[addr]=val;if(!ws['!ref'])ws['!ref']=addr;else{const ref=XLSX.utils.decode_range(ws['!ref']);ref.e.r=Math.max(ref.e.r,r);ref.e.c=Math.max(ref.e.c,c);ws['!ref']=XLSX.utils.encode_range(ref);}}
+
+  // HOJA 1: RESUMEN ANUAL
+  const ws1={};ws1['!merges']=[];let r=0;
+  setCell(ws1,r,0,cell(`RESUMEN ANUAL ${year} · ${nombre}`,ST.titulo));
+  for(let c=1;c<6;c++)setCell(ws1,r,c,cell('',ST.titulo));
+  ws1['!merges'].push({s:{r:0,c:0},e:{r:0,c:5}});r++;
+  setCell(ws1,r,0,cell(`Generado: ${new Date().toLocaleDateString('es-CO')}`,{font:{sz:8,italic:true,color:{rgb:'4A7A90'}},fill:{fgColor:{rgb:'08192E'}}}));
+  for(let c=1;c<6;c++)setCell(ws1,r,c,cell('',{fill:{fgColor:{rgb:'08192E'}}}));
+  ws1['!merges'].push({s:{r:1,c:0},e:{r:1,c:5}});r++;
+  for(let c=0;c<6;c++)setCell(ws1,r,c,cell('',ST.vacio));ws1['!merges'].push({s:{r:r,c:0},e:{r:r,c:5}});r++;
+  ['MES','INGRESOS','GASTOS FIJOS','GASTOS VARIABLES','TOTAL GASTOS','SALDO'].forEach((h,c)=>setCell(ws1,r,c,cell(h,ST.colHeader)));r++;
   MESES.forEach((m,i)=>{
-    const ing=ingM(i),fij=fijM(i),vrb=varM(i),gas=fij+vrb;
-    proj.push([m,ing,fij,vrb,gas,ing-gas]);
+    const ing=ingM(i),fij=fijM(i),vrb=varM(i),gas=fij+vrb,sal=ing-gas;
+    const isMesActual=i===S.mesActivo;
+    const bgMes=isMesActual?{rgb:'102E50'}:{rgb:'0D2D45'};
+    const bord={top:{style:'thin',color:{rgb:'1A4060'}},bottom:{style:'thin',color:{rgb:'1A4060'}}};
+    setCell(ws1,r,0,cell(m,{font:{bold:isMesActual,sz:10,color:{rgb:isMesActual?'22D3EE':'BAE6FD'}},fill:{fgColor:bgMes},border:{...bord,left:{style:'medium',color:{rgb:'06B6D4'}}}}));
+    setCell(ws1,r,1,numFmt(ing,{font:{sz:9,color:{rgb:'06B6D4'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
+    setCell(ws1,r,2,numFmt(fij,{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
+    setCell(ws1,r,3,numFmt(vrb,{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
+    setCell(ws1,r,4,numFmt(gas,{font:{sz:9,color:{rgb:'FDBA74'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
+    setCell(ws1,r,5,numFmt(sal,{font:{bold:true,sz:9,color:{rgb:sal>=0?'34D399':'F97316'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:{...bord,right:{style:'medium',color:{rgb:'06B6D4'}}}}));r++;
+    for(let c=0;c<6;c++)setCell(ws1,r,c,cell('',ST.vacio));ws1['!merges'].push({s:{r:r,c:0},e:{r:r,c:5}});r++;
   });
-  const totIng=MESES.reduce((_,__,i)=>_+ingM(i),0);
-  const totFij=MESES.reduce((_,__,i)=>_+fijM(i),0);
-  const totVrb=MESES.reduce((_,__,i)=>_+varM(i),0);
-  const totGas=totFij+totVrb;
-  proj.push(['']);
-  proj.push(['TOTAL ANUAL',totIng,totFij,totVrb,totGas,totIng-totGas]);
-  const wsProj=XLSX.utils.aoa_to_sheet(proj);
-  wsProj['!cols']=[{wch:18},{wch:16},{wch:16},{wch:18},{wch:16},{wch:14}];
-  // Merge título
-  wsProj['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
-  XLSX.utils.book_append_sheet(wb,wsProj,'Resumen Anual');
+  const totIng=MESES.reduce((_,__,i)=>_+ingM(i),0),totFij=MESES.reduce((_,__,i)=>_+fijM(i),0),totVrb=MESES.reduce((_,__,i)=>_+varM(i),0),totGas=totFij+totVrb;
+  setCell(ws1,r,0,cell('TOTAL ANUAL',ST.totalLabel));
+  setCell(ws1,r,1,numFmt(totIng,ST.total));setCell(ws1,r,2,numFmt(totFij,ST.total));setCell(ws1,r,3,numFmt(totVrb,ST.total));setCell(ws1,r,4,numFmt(totGas,ST.total));
+  setCell(ws1,r,5,numFmt(totIng-totGas,{...ST.totalRight,font:{bold:true,sz:10,color:{rgb:totIng-totGas>=0?'34D399':'F97316'}}}));
+  ws1['!cols']=[{wch:20},{wch:16},{wch:16},{wch:18},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Resumen Anual');
 
-  // ── Hoja 2: Ingresos ──
-  const ing2=[
-    [`INGRESOS ${year}`,'',''],
-    ['MES','VALOR','DESCRIPCIÓN']
-  ];
-  S.ingresos.forEach(i=>ing2.push([MESES[i.mes],i.valor,i.desc]));
-  ing2.push(['']);
-  ing2.push(['TOTAL',S.ingresos.reduce((a,b)=>a+b.valor,0),'']);
-  const wsIng=XLSX.utils.aoa_to_sheet(ing2);
-  wsIng['!cols']=[{wch:16},{wch:14},{wch:30}];
-  wsIng['!merges']=[{s:{r:0,c:0},e:{r:0,c:2}}];
-  XLSX.utils.book_append_sheet(wb,wsIng,'Ingresos');
+  // HOJA 2: INGRESOS agrupados por mes
+  const ws2={};ws2['!merges']=[];let r2=0;
+  setCell(ws2,r2,0,cell(`INGRESOS ${year}`,ST.titulo));for(let c=1;c<3;c++)setCell(ws2,r2,c,cell('',ST.titulo));ws2['!merges'].push({s:{r:0,c:0},e:{r:0,c:2}});r2++;
+  setCell(ws2,r2,0,cell('',ST.vacio));ws2['!merges'].push({s:{r:1,c:0},e:{r:1,c:2}});r2++;
+  MESES.forEach((m,i)=>{
+    const rows=S.ingresos.filter(x=>x.mes===i);if(!rows.length)return;
+    setCell(ws2,r2,0,cell(m.toUpperCase(),ST.mesHeader));setCell(ws2,r2,1,cell('',ST.mesHeader));setCell(ws2,r2,2,cell('',ST.mesHeader));ws2['!merges'].push({s:{r:r2,c:0},e:{r:r2,c:2}});r2++;
+    ['DESCRIPCIÓN','VALOR',''].forEach((h,c)=>setCell(ws2,r2,c,cell(h,ST.subtitulo)));r2++;
+    rows.forEach(x=>{setCell(ws2,r2,0,cell(x.desc||'—',ST.datoLabel));setCell(ws2,r2,1,numFmt(x.valor,ST.dato));setCell(ws2,r2,2,cell('',ST.datoRight));r2++;});
+    const tot=rows.reduce((a,b)=>a+b.valor,0);
+    setCell(ws2,r2,0,cell('Total '+m,ST.totalLabel));setCell(ws2,r2,1,numFmt(tot,ST.total));setCell(ws2,r2,2,cell('',ST.totalRight));r2++;
+    setCell(ws2,r2,0,cell('',ST.vacio));ws2['!merges'].push({s:{r:r2,c:0},e:{r:r2,c:2}});r2++;
+    setCell(ws2,r2,0,cell('',ST.vacio));ws2['!merges'].push({s:{r:r2,c:0},e:{r:r2,c:2}});r2++;
+  });
+  const gtIng=S.ingresos.reduce((a,b)=>a+b.valor,0);
+  setCell(ws2,r2,0,cell('TOTAL ANUAL',ST.totalLabel));setCell(ws2,r2,1,numFmt(gtIng,ST.total));setCell(ws2,r2,2,cell('',ST.totalRight));
+  ws2['!cols']=[{wch:34},{wch:16},{wch:4}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Ingresos');
 
-  // ── Hoja 3: Gastos Fijos ──
-  const fij2=[
-    ['GASTOS FIJOS MENSUALES','','',''],
-    ['ÍTEM','UBICACIÓN','VALOR MENSUAL','DÍA LÍMITE']
-  ];
-  S.gastosFijos.forEach(f=>fij2.push([f.item,f.ubi,f.valor,f.diaLimite||'—']));
-  fij2.push(['']);
-  fij2.push(['TOTAL MENSUAL','',S.gastosFijos.reduce((a,b)=>a+b.valor,0),'']);
-  const wsFij=XLSX.utils.aoa_to_sheet(fij2);
-  wsFij['!cols']=[{wch:24},{wch:16},{wch:16},{wch:14}];
-  wsFij['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}}];
-  XLSX.utils.book_append_sheet(wb,wsFij,'Gastos Fijos');
+  // HOJA 3: GASTOS FIJOS agrupados por ubicación
+  const ws3={};ws3['!merges']=[];let r3=0;
+  setCell(ws3,r3,0,cell('GASTOS FIJOS MENSUALES',ST.titulo));for(let c=1;c<4;c++)setCell(ws3,r3,c,cell('',ST.titulo));ws3['!merges'].push({s:{r:0,c:0},e:{r:0,c:3}});r3++;
+  setCell(ws3,r3,0,cell('',ST.vacio));ws3['!merges'].push({s:{r:1,c:0},e:{r:1,c:3}});r3++;
+  const grpUbi={};S.gastosFijos.forEach(f=>{if(!grpUbi[f.ubi])grpUbi[f.ubi]=[];grpUbi[f.ubi].push(f);});
+  Object.entries(grpUbi).forEach(([ubi,fijos])=>{
+    setCell(ws3,r3,0,cell(ubi.toUpperCase(),ST.mesHeader));for(let c=1;c<4;c++)setCell(ws3,r3,c,cell('',ST.mesHeader));ws3['!merges'].push({s:{r:r3,c:0},e:{r:r3,c:3}});r3++;
+    ['ÍTEM','UBICACIÓN','VALOR MENSUAL','DÍA LÍMITE'].forEach((h,c)=>setCell(ws3,r3,c,cell(h,ST.colHeader)));r3++;
+    fijos.forEach(f=>{setCell(ws3,r3,0,cell(f.item,ST.datoLabel));setCell(ws3,r3,1,cell(f.ubi,ST.dato));setCell(ws3,r3,2,numFmt(f.valor,ST.dato));setCell(ws3,r3,3,cell(f.diaLimite?'Día '+f.diaLimite:'—',{...ST.dato,alignment:{horizontal:'center'}}));r3++;});
+    const totUbi=fijos.reduce((a,b)=>a+b.valor,0);
+    setCell(ws3,r3,0,cell('Total '+ubi,ST.totalLabel));setCell(ws3,r3,1,cell('',ST.total));setCell(ws3,r3,2,numFmt(totUbi,ST.total));setCell(ws3,r3,3,cell('',ST.totalRight));r3++;
+    setCell(ws3,r3,0,cell('',ST.vacio));ws3['!merges'].push({s:{r:r3,c:0},e:{r:r3,c:3}});r3++;
+    setCell(ws3,r3,0,cell('',ST.vacio));ws3['!merges'].push({s:{r:r3,c:0},e:{r:r3,c:3}});r3++;
+  });
+  setCell(ws3,r3,0,cell('TOTAL MENSUAL',ST.totalLabel));setCell(ws3,r3,1,cell('',ST.total));setCell(ws3,r3,2,numFmt(S.gastosFijos.reduce((a,b)=>a+b.valor,0),ST.total));setCell(ws3,r3,3,cell('',ST.totalRight));
+  ws3['!cols']=[{wch:26},{wch:18},{wch:16},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Gastos Fijos');
 
-  // ── Hoja 4: Gastos Variables ──
-  const var2=[
-    [`GASTOS VARIABLES ${year}`,'','','',''],
-    ['MES','FECHA','CATEGORÍA','VALOR','DESCRIPCIÓN']
-  ];
-  S.gastosVariables.forEach(g=>var2.push([MESES[g.mes],g.fecha||'—',g.cat,g.valor,g.desc]));
-  var2.push(['']);
-  var2.push(['TOTAL','','',S.gastosVariables.reduce((a,b)=>a+b.valor,0),'']);
-  const wsVar=XLSX.utils.aoa_to_sheet(var2);
-  wsVar['!cols']=[{wch:14},{wch:12},{wch:16},{wch:14},{wch:30}];
-  wsVar['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
-  XLSX.utils.book_append_sheet(wb,wsVar,'Gastos Variables');
+  // HOJA 4: GASTOS VARIABLES agrupados por mes
+  const ws4={};ws4['!merges']=[];let r4=0;
+  setCell(ws4,r4,0,cell(`GASTOS VARIABLES ${year}`,ST.titulo));for(let c=1;c<5;c++)setCell(ws4,r4,c,cell('',ST.titulo));ws4['!merges'].push({s:{r:0,c:0},e:{r:0,c:4}});r4++;
+  setCell(ws4,r4,0,cell('',ST.vacio));ws4['!merges'].push({s:{r:1,c:0},e:{r:1,c:4}});r4++;
+  MESES.forEach((m,i)=>{
+    const rows=S.gastosVariables.filter(x=>x.mes===i);if(!rows.length)return;
+    setCell(ws4,r4,0,cell(m.toUpperCase(),ST.mesHeader));for(let c=1;c<5;c++)setCell(ws4,r4,c,cell('',ST.mesHeader));ws4['!merges'].push({s:{r:r4,c:0},e:{r:r4,c:4}});r4++;
+    ['FECHA','CATEGORÍA','DESCRIPCIÓN','VALOR',''].forEach((h,c)=>setCell(ws4,r4,c,cell(h,ST.subtitulo)));r4++;
+    rows.forEach(g=>{setCell(ws4,r4,0,cell(g.fecha||'—',{...ST.datoLabel,alignment:{horizontal:'center'}}));setCell(ws4,r4,1,cell(g.cat,ST.dato));setCell(ws4,r4,2,cell(g.desc||'—',ST.dato));setCell(ws4,r4,3,numFmt(g.valor,ST.dato));setCell(ws4,r4,4,cell('',ST.datoRight));r4++;});
+    const tot=rows.reduce((a,b)=>a+b.valor,0);
+    setCell(ws4,r4,0,cell('Total '+m,ST.totalLabel));setCell(ws4,r4,1,cell('',ST.total));setCell(ws4,r4,2,cell('',ST.total));setCell(ws4,r4,3,numFmt(tot,ST.total));setCell(ws4,r4,4,cell('',ST.totalRight));r4++;
+    setCell(ws4,r4,0,cell('',ST.vacio));ws4['!merges'].push({s:{r:r4,c:0},e:{r:r4,c:4}});r4++;
+    setCell(ws4,r4,0,cell('',ST.vacio));ws4['!merges'].push({s:{r:r4,c:0},e:{r:r4,c:4}});r4++;
+  });
+  const gtVar=S.gastosVariables.reduce((a,b)=>a+b.valor,0);
+  setCell(ws4,r4,0,cell('TOTAL ANUAL',ST.totalLabel));setCell(ws4,r4,1,cell('',ST.total));setCell(ws4,r4,2,cell('',ST.total));setCell(ws4,r4,3,numFmt(gtVar,ST.total));setCell(ws4,r4,4,cell('',ST.totalRight));
+  ws4['!cols']=[{wch:13},{wch:16},{wch:28},{wch:16},{wch:4}];
+  XLSX.utils.book_append_sheet(wb,ws4,'Gastos Variables');
 
-  // ── Hoja 5: Pagos fijos por mes ──
+  // HOJA 5: Control de pagos
   const pag=[['CONTROL DE PAGOS FIJOS',...MESES.map(m=>m.substring(0,3))]];
-  S.gastosFijos.forEach(f=>{
-    const row=[f.item+' ('+f.ubi+')'];
-    MESES.forEach((_,mi)=>{
-      const p=gPago(mi,f.id);
-      row.push(p==='pagado'?'✓ Pagado':p==='no aplica'?'N/A':'⏳ Pendiente');
-    });
-    pag.push(row);
-  });
-  const wsPag=XLSX.utils.aoa_to_sheet(pag);
-  wsPag['!cols']=[{wch:28},...MESES.map(()=>({wch:11}))];
+  S.gastosFijos.forEach(f=>{const row=[f.item+' ('+f.ubi+')'];MESES.forEach((_,mi)=>{const pp=gPago(mi,f.id);row.push(pp==='pagado'?'✓ Pagado':pp==='no aplica'?'N/A':'⏳ Pendiente');});pag.push(row);});
+  const wsPag=XLSX.utils.aoa_to_sheet(pag);wsPag['!cols']=[{wch:28},...MESES.map(()=>({wch:11}))];
   XLSX.utils.book_append_sheet(wb,wsPag,'Control de Pagos');
+
+  // HOJA 6: Resumen mes activo
+  const ma=S.mesActivo,ws6={};ws6['!merges']=[];let r6=0;
+  const ingMes=ingM(ma),fijMes=fijM(ma),varMes=varM(ma),gasMes=fijMes+varMes,salMes=ingMes-gasMes;
+  setCell(ws6,r6,0,cell(`RESUMEN · ${MESES[ma].toUpperCase()} ${year}`,ST.titulo));for(let c=1;c<4;c++)setCell(ws6,r6,c,cell('',ST.titulo));ws6['!merges'].push({s:{r:0,c:0},e:{r:0,c:3}});r6++;
+  setCell(ws6,r6,0,cell('',ST.vacio));ws6['!merges'].push({s:{r:1,c:0},e:{r:1,c:3}});r6++;
+  [['INGRESOS',ingMes,'06B6D4'],['GASTOS FIJOS',fijMes,'E0F2FE'],['GASTOS VARIABLES',varMes,'E0F2FE'],['TOTAL GASTOS',gasMes,'FDBA74'],['SALDO',salMes,salMes>=0?'34D399':'F97316']].forEach(([lbl,val,col])=>{
+    setCell(ws6,r6,0,cell(lbl,{font:{bold:true,sz:10,color:{rgb:'7ECFE8'}},fill:{fgColor:{rgb:'0A2438'}},border:{left:{style:'medium',color:{rgb:'06B6D4'}},bottom:{style:'thin',color:{rgb:'1E3D55'}}}}));
+    setCell(ws6,r6,1,numFmt(val,{font:{bold:true,sz:10,color:{rgb:col}},fill:{fgColor:{rgb:'0D2D45'}},alignment:{horizontal:'right'},border:{bottom:{style:'thin',color:{rgb:'1E3D55'}}}}));
+    for(let c=2;c<4;c++)setCell(ws6,r6,c,cell('',{fill:{fgColor:{rgb:'0D2D45'}},border:{right:c===3?{style:'medium',color:{rgb:'06B6D4'}}:{},bottom:{style:'thin',color:{rgb:'1E3D55'}}}}));r6++;
+  });
+  setCell(ws6,r6,0,cell('',ST.vacio));ws6['!merges'].push({s:{r:r6,c:0},e:{r:r6,c:3}});r6++;
+  setCell(ws6,r6,0,cell('',ST.vacio));ws6['!merges'].push({s:{r:r6,c:0},e:{r:r6,c:3}});r6++;
+  const gvMes=S.gastosVariables.filter(g=>g.mes===ma);
+  if(gvMes.length){
+    setCell(ws6,r6,0,cell('GASTOS VARIABLES DEL MES',ST.mesHeader));for(let c=1;c<4;c++)setCell(ws6,r6,c,cell('',ST.mesHeader));ws6['!merges'].push({s:{r:r6,c:0},e:{r:r6,c:3}});r6++;
+    ['FECHA','CATEGORÍA','DESCRIPCIÓN','VALOR'].forEach((h,c)=>setCell(ws6,r6,c,cell(h,ST.colHeader)));r6++;
+    gvMes.forEach(g=>{setCell(ws6,r6,0,cell(g.fecha||'—',ST.datoLabel));setCell(ws6,r6,1,cell(g.cat,ST.dato));setCell(ws6,r6,2,cell(g.desc||'—',ST.dato));setCell(ws6,r6,3,numFmt(g.valor,{...ST.dato,font:{sz:9,color:{rgb:'FDBA74'}}}));r6++;});
+  }
+  ws6['!cols']=[{wch:24},{wch:16},{wch:28},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws6,MESES[ma].substring(0,3)+' '+year);
 
   XLSX.writeFile(wb,`Finanzas_${year}.xlsx`);
   toast('Excel descargado ✓','ph-microsoft-excel-logo');
@@ -1601,50 +1823,262 @@ async function exportPNG(m){
 }
 
 // ═══════════════════════════════════════════════════
-//  GOOGLE SHEETS SYNC
+//  DYNAMIC CATEGORIES
 // ═══════════════════════════════════════════════════
-function connectSheets(){
-  const url=document.getElementById('sheets-url').value.trim();
-  const key=document.getElementById('sheets-key').value.trim();
-  const id=document.getElementById('sheets-id').value.trim();
-  if(!url&&!id){toast('Ingresa la URL o ID de la hoja','ph-warning');return;}
-  S.sheets={url,key,id,connected:!!(url||id)};
-  save();updateSettingsProfile();
-  toast(S.sheets.connected?'Google Sheets conectado ✓':'Configuración guardada','ph-check-circle');
+function populateCatSelect(selectEl, selectedVal=''){
+  syncCatArrays();
+  selectEl.innerHTML = CATS.map(c=>`<option value="${c}" ${c===selectedVal?'selected':''}>${c}</option>`).join('')
+    + `<option value="__nueva__" ${selectedVal==='__nueva__'?'selected':''}>➕ Nueva categoría...</option>`;
+}
+function onCatChange(sel){
+  const box=document.getElementById('nueva-cat-box');
+  box.style.display=sel.value==='__nueva__'?'block':'none';
+  if(sel.value==='__nueva__')document.getElementById('nueva-cat-nombre').focus();
+}
+function addNewCat(nombre){
+  const n=nombre.trim();
+  if(!n||CATS.includes(n))return n||CATS[0];
+  CATS.push(n);
+  CAT_COLORS.push(catColor(CATS.length-1));
+  CAT_ICONS.push('ph-tag');
+  if(!S.customCats)S.customCats=[];
+  if(!S.customCats.includes(n))S.customCats.push(n);
+  save();
+  // Notificar que hay nueva pestaña que crear en Sheets
+  pendingNewSheetTab=n;
+  return n;
+}
+let pendingNewSheetTab=null;
+
+// ═══════════════════════════════════════════════════
+//  GOOGLE SHEETS — API REAL
+// ═══════════════════════════════════════════════════
+function sheetsLog(msg){
+  const el=document.getElementById('sheets-sync-log');
+  if(!el)return;
+  el.style.display='block';
+  el.innerHTML+=`<div>${msg}</div>`;
+}
+function sheetsClearLog(){
+  const el=document.getElementById('sheets-sync-log');
+  if(el){el.innerHTML='';el.style.display='none';}
 }
 
-async function syncToSheets(silent=false){
-  if(!S.sheets.connected)return;
-  if(!silent)toast('Sincronizando...','ph-arrows-clockwise');
-  // Build the data payload matching the same sheet structure
-  const sheetData={
-    ingresos:S.ingresos.map(i=>({mes:MESES[i.mes],valor:i.valor,desc:i.desc})),
-    gastosFijos:S.gastosFijos.map(f=>({item:f.item,ubi:f.ubi,valor:f.valor})),
-    gastosVariables:S.gastosVariables.map(g=>({mes:MESES[g.mes],cat:g.cat,valor:g.valor,desc:g.desc})),
-    proyeccion:MESES.map((m,i)=>({mes:m,ingresos:ingM(i),fijos:fijM(i),variables:varM(i),total:gasM(i),saldo:ingM(i)-gasM(i)}))
-  };
-  // If a real Apps Script Web App URL is provided, send the data
-  if(S.sheets.url&&S.sheets.url.startsWith('https://script.google.com')){
-    try{
-      await fetch(S.sheets.url,{method:'POST',mode:'no-cors',body:JSON.stringify(sheetData),headers:{'Content-Type':'application/json'}});
-      if(!silent)toast('Sincronizado con Sheets ✓','ph-check-circle');
-    }catch(e){if(!silent)toast('Error de conexión','ph-warning');}
-  }else{
-    // Local export fallback: download as Excel
-    if(!silent){
-      const wb=XLSX.utils.book_new();
-      const proj=[['Mes','Ingresos','Fijos','Variables','Total','Saldo'],...sheetData.proyeccion.map(r=>[r.mes,r.ingresos,r.fijos,r.variables,r.total,r.saldo])];
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(proj),'Proyección');
-      const ing=[['Mes','Valor','Descripción'],...sheetData.ingresos.map(r=>[r.mes,r.valor,r.desc])];
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ing),'Ingresos');
-      const fij=[['Ítem','Ubicación','Valor'],...sheetData.gastosFijos.map(r=>[r.item,r.ubi,r.valor])];
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(fij),'Gastos fijos');
-      const varr=[['Mes','Categoría','Valor','Descripción'],...sheetData.gastosVariables.map(r=>[r.mes,r.cat,r.valor,r.desc])];
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(varr),'Gastos variables');
-      XLSX.writeFile(wb,'Finanzas_Sheets.xlsx');
-      toast('Exportado a Excel (sin URL de Sheets)','ph-microsoft-excel-logo');
+function getSheetsCfg(){
+  return{id:S.sheets.id||SHEET_ID, apiKey:S.sheets.apiKey||S.sheets.key||''};
+}
+
+async function sheetsGet(sheetName, range){
+  const{id,apiKey}=getSheetsCfg();
+  if(!apiKey)throw new Error('Falta la API Key. Configúrala en Ajustes → Google Sheets.');
+  const enc=encodeURIComponent(`${sheetName}!${range}`);
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${enc}?key=${apiKey}`;
+  const r=await fetch(url);
+  if(!r.ok){const t=await r.text();throw new Error(`Error Sheets (${r.status}): ${t.substring(0,120)}`);}
+  const d=await r.json();
+  return d.values||[];
+}
+
+async function sheetsPut(sheetName, range, values){
+  const{id,apiKey}=getSheetsCfg();
+  if(!apiKey)throw new Error('Falta la API Key');
+  const enc=encodeURIComponent(`${sheetName}!${range}`);
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${enc}?valueInputOption=USER_ENTERED&key=${apiKey}`;
+  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({range:`${sheetName}!${range}`,majorDimension:'ROWS',values})});
+  if(!r.ok){const t=await r.text();throw new Error(`Error al escribir (${r.status}): ${t.substring(0,120)}`);}
+  return await r.json();
+}
+
+// Convierte índice de mes (0-11) a columna de inicio en la hoja (que tiene pares VALOR/DESCRIPCION)
+// Estructura: col A=vacío, B=ENERO VALOR, C=ENERO DESC, D=FEB VALOR, E=FEB DESC...
+function mesToColIndex(mesIdx){return 1+mesIdx*2;} // 0-based: B=1,C=2...
+function colLetter(idx){return String.fromCharCode(65+idx);} // A=0,B=1...
+
+// ── CARGAR desde Sheets ──────────────────────────────
+async function loadFromSheets(){
+  sheetsClearLog();
+  toast('Cargando desde Sheets...','ph-arrows-clockwise');
+  sheetsLog('🔄 Iniciando carga...');
+  try{
+    // 1. Cargar ingresos
+    sheetsLog('📥 Leyendo INGRESOS...');
+    await loadIngresosFromSheets();
+    // 2. Cargar gastos variables por pestaña de categoría
+    const cats=Object.keys(SHEET_TAB_MAP).filter(k=>k!=='INGRESOS');
+    for(const tab of cats){
+      try{
+        sheetsLog(`📥 Leyendo ${tab}...`);
+        await loadCatFromSheets(tab, SHEET_TAB_MAP[tab]);
+      }catch(e){sheetsLog(`⚠ ${tab}: ${e.message.substring(0,60)}`);}
     }
+    save();
+    renderDash();renderVar();renderIng();
+    toast('Datos cargados desde Sheets ✓','ph-check-circle');
+    sheetsLog('✅ Carga completa');
+  }catch(e){
+    toast('Error: '+e.message.substring(0,50),'ph-warning');
+    sheetsLog('❌ '+e.message);
   }
+}
+
+async function loadIngresosFromSheets(){
+  // La hoja INGRESOS tiene: fila 1=meses, fila 2=VALOR/DESCRIPCION, filas 3+= datos, última=TOTAL
+  const rows=await sheetsGet('INGRESOS','B1:Y50');
+  if(!rows.length)return;
+  // Fila 0: encabezados de mes (cada 2 cols)
+  const nuevosIngresos=[];
+  let nid_local=Date.now();
+  MESES.forEach((_,mi)=>{
+    const colOff=mi*2; // VALOR está en col colOff, DESC en colOff+1
+    rows.forEach((row,ri)=>{
+      if(ri<2)return; // saltar encabezados
+      const val=row[colOff];
+      const desc=row[colOff+1]||'';
+      if(!val||val==='TOTAL'||val.toString().trim()==='')return;
+      const num=parseFloat(val.toString().replace(/[$, ]/g,''));
+      if(!isNaN(num)&&num!==0){
+        nuevosIngresos.push({id:nid_local++,mes:mi,valor:num,desc:desc.toString().trim()});
+      }
+    });
+  });
+  if(nuevosIngresos.length){
+    S.ingresos=nuevosIngresos;
+    sheetsLog(`  → ${nuevosIngresos.length} ingresos cargados`);
+  }
+}
+
+async function loadCatFromSheets(tabName, catName){
+  // Estructura: fila 0=meses, fila 1=VALOR/DESC headers, fila 2=DIA header, filas 3-33=días 1-31, última=TOTAL
+  // Columnas: A=día, B=ene_valor, C=ene_desc, D=feb_valor, E=feb_desc...
+  const rows=await sheetsGet(tabName,'A1:Y35');
+  if(rows.length<3)return;
+  // Asegurar que la categoría existe
+  if(!CATS.includes(catName)){
+    CATS.push(catName);CAT_COLORS.push(catColor(CATS.length-1));CAT_ICONS.push('ph-tag');
+    if(!S.customCats)S.customCats=[];
+    if(!S.customCats.includes(catName))S.customCats.push(catName);
+  }
+  // Eliminar registros existentes de esta categoría
+  S.gastosVariables=S.gastosVariables.filter(g=>g.cat!==catName);
+  let nid_local=Date.now()+Math.random()*1000|0;
+  let count=0;
+  MESES.forEach((_,mi)=>{
+    const valorCol=1+mi*2; // B=1 para enero, D=3 para feb...
+    const descCol=valorCol+1;
+    rows.forEach((row,ri)=>{
+      if(ri<2)return;
+      const diaCell=row[0]?.toString().trim();
+      if(!diaCell||diaCell.toUpperCase()==='DIA'||diaCell.toUpperCase()==='TOTAL')return;
+      const dia=parseInt(diaCell);
+      if(isNaN(dia)||dia<1||dia>31)return;
+      const val=row[valorCol];
+      const desc=row[descCol]||'';
+      if(!val||val.toString().trim()==='')return;
+      const num=parseFloat(val.toString().replace(/[$,. ]/g,'').replace(',','.'));
+      const num2=parseFloat(val.toString().replace(/[$, ]/g,''));
+      const finalNum=isNaN(num2)?num:num2;
+      if(isNaN(finalNum)||finalNum===0)return;
+      const year=new Date().getFullYear();
+      const fecha=`${year}-${String(mi+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      S.gastosVariables.push({id:nid_local++,mes:mi,cat:catName,valor:finalNum,desc:desc.toString().trim(),fecha});
+      count++;
+    });
+  });
+  if(count)sheetsLog(`  → ${count} registros en ${catName}`);
+}
+
+// ── GUARDAR en Sheets ─────────────────────────────────
+async function syncToSheets(silent=false){
+  if(!S.sheets.id&&!SHEET_ID){if(!silent)toast('Configura el ID de la hoja','ph-warning');return;}
+  if(!S.sheets.apiKey&&!S.sheets.key){if(!silent)toast('Falta la API Key','ph-warning');return;}
+  sheetsClearLog();
+  if(!silent)toast('Guardando en Sheets...','ph-arrows-clockwise');
+  sheetsLog('🔄 Iniciando guardado...');
+  try{
+    // Guardar ingresos
+    sheetsLog('💾 Guardando INGRESOS...');
+    await saveIngresosToSheets();
+    // Guardar gastos variables por categoría
+    const cats=[...new Set(S.gastosVariables.map(g=>g.cat))];
+    for(const cat of cats){
+      sheetsLog(`💾 Guardando ${cat}...`);
+      await saveCatToSheets(cat);
+    }
+    // Si hay nueva pestaña pendiente
+    if(pendingNewSheetTab){
+      sheetsLog(`📋 Nueva pestaña creada: ${pendingNewSheetTab} (agrégala manualmente en Sheets con la misma estructura)`);
+      pendingNewSheetTab=null;
+    }
+    if(!silent)toast('Guardado en Sheets ✓','ph-check-circle');
+    sheetsLog('✅ Guardado completo');
+  }catch(e){
+    if(!silent)toast('Error: '+e.message.substring(0,50),'ph-warning-circle');
+    sheetsLog('❌ '+e.message);
+  }
+}
+
+async function saveIngresosToSheets(){
+  // Construir la grilla de ingresos: filas de datos × columnas de meses
+  // Encontrar el máximo de filas necesarias
+  const maxRows=Math.max(...MESES.map((_,mi)=>S.ingresos.filter(i=>i.mes===mi).length),1)+1;
+  // Inicializar grilla vacía
+  const grid=Array.from({length:maxRows},()=>Array(24).fill(''));
+  MESES.forEach((_,mi)=>{
+    const colOff=mi*2;
+    const rows=S.ingresos.filter(i=>i.mes===mi);
+    rows.forEach((ing,ri)=>{
+      grid[ri][colOff]=ing.valor;
+      grid[ri][colOff+1]=ing.desc;
+    });
+    // Fila de total
+    const tot=rows.reduce((a,b)=>a+b.valor,0);
+    grid[maxRows-1][colOff]=tot||'';
+  });
+  await sheetsPut('INGRESOS',`B3:Y${2+maxRows}`,grid);
+}
+
+async function saveCatToSheets(catName){
+  // Encontrar el tab name en Sheets
+  const tabEntry=Object.entries(SHEET_TAB_MAP).find(([k,v])=>v===catName);
+  const tabName=tabEntry?tabEntry[0]:catName.toUpperCase();
+  // Construir grilla 31 días × 24 cols (12 meses × 2 col)
+  const grid=Array.from({length:31},(_,i)=>{
+    const row=[String(i+1),...Array(24).fill('')];
+    return row;
+  });
+  S.gastosVariables.filter(g=>g.cat===catName).forEach(g=>{
+    let dia=1;
+    if(g.fecha){dia=parseInt(g.fecha.substring(8,10));}
+    if(dia<1||dia>31)return;
+    const colOff=1+g.mes*2;
+    grid[dia-1][colOff]=g.valor;
+    grid[dia-1][colOff+1]=g.desc||'';
+  });
+  // Fila de totales
+  const totRow=['TOTAL'];
+  MESES.forEach((_,mi)=>{
+    const tot=S.gastosVariables.filter(g=>g.cat===catName&&g.mes===mi).reduce((a,b)=>a+b.valor,0);
+    totRow.push(tot||'','');
+  });
+  const allRows=[...grid,totRow];
+  try{
+    await sheetsPut(tabName,`A3:Y${3+allRows.length-1}`,allRows);
+    sheetsLog(`  → ${catName} guardado`);
+  }catch(e){
+    sheetsLog(`  ⚠ ${catName} (tab "${tabName}"): ${e.message.substring(0,60)}`);
+  }
+}
+
+function connectSheets(){
+  const id=document.getElementById('sheets-id').value.trim();
+  const apiKey=document.getElementById('sheets-api-key').value.trim();
+  if(!id){toast('Ingresa el ID de la hoja','ph-warning');return;}
+  S.sheets={...S.sheets,id,apiKey,connected:true};
+  save();
+  document.getElementById('sheets-conn-status').textContent='✅ Configurado correctamente';
+  document.getElementById('sheets-conn-status').style.color='var(--brand)';
+  toast('Configuración guardada ✓','ph-check-circle');
+  updateSettingsProfile();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1682,6 +2116,22 @@ document.head.appendChild(style);
 applyTheme(S.theme||'dark');
 updatePill();
 loadProfile();
+// Cargar categorías personalizadas del estado
+if(S.customCats&&S.customCats.length){
+  S.customCats.forEach(c=>{if(!CATS.includes(c)){CATS.push(c);CAT_COLORS.push(catColor(CATS.length-1));CAT_ICONS.push('ph-tag');}});
+}
+syncCatArrays();
+// Pre-llenar ID de la hoja si ya está guardado
+setTimeout(()=>{
+  const idEl=document.getElementById('sheets-id');
+  const keyEl=document.getElementById('sheets-api-key');
+  if(idEl&&S.sheets.id)idEl.value=S.sheets.id;
+  if(keyEl&&(S.sheets.apiKey||S.sheets.key))keyEl.value=S.sheets.apiKey||S.sheets.key;
+  if(S.sheets.connected){
+    const st=document.getElementById('sheets-conn-status');
+    if(st){st.textContent='✅ Configurado correctamente';st.style.color='var(--brand)';}
+  }
+},100);
 renderDash();
 initDate();
 checkMensualReset();
