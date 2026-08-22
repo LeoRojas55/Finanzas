@@ -23,9 +23,9 @@
   --brand:        #06b6d4;
   --brand-dark:   #0e7490;
   --brand-light:  #22d3ee;
-  --accent:       #f97316;
-  --accent-dark:  #9a3412;
-  --accent-light: #fdba74;
+  --accent:       #e05252;
+  --accent-dark:  #b83232;
+  --accent-light: #f08080;
 
   --bg:    #0c1a2e;
   --bg2:   #0f2337;
@@ -54,8 +54,8 @@
 
   --teal-dim:   rgba(6,182,212,0.12);
   --teal-dim2:  rgba(6,182,212,0.2);
-  --orange-dim: rgba(249,115,22,0.12);
-  --orange-dim2:rgba(249,115,22,0.2);
+  --orange-dim: rgba(224,82,82,0.12);
+  --orange-dim2:rgba(224,82,82,0.2);
 }
 
 /* ─── LIGHT THEME ───────────────────────────────────── */
@@ -63,9 +63,9 @@
   --brand:        #0e7490;
   --brand-dark:   #0a5a70;
   --brand-light:  #06b6d4;
-  --accent:       #ea6c0a;
-  --accent-dark:  #9a3412;
-  --accent-light: #f97316;
+  --accent:       #d94040;
+  --accent-dark:  #b83232;
+  --accent-light: #e05252;
 
   --bg:    #f0f7fa;
   --bg2:   #ffffff;
@@ -94,8 +94,8 @@
 
   --teal-dim:   rgba(14,116,144,0.1);
   --teal-dim2:  rgba(14,116,144,0.18);
-  --orange-dim: rgba(234,108,10,0.1);
-  --orange-dim2:rgba(234,108,10,0.18);
+  --orange-dim: rgba(217,64,64,0.10);
+  --orange-dim2:rgba(217,64,64,0.18);
 }
 
 /* ─── BASE ─────────────────────────────────────────── */
@@ -153,9 +153,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .c-accent{color:var(--accent);}
 .c-accent-light{color:var(--accent-light);}
 .metric.card-teal{border-color:rgba(6,182,212,0.25);background:linear-gradient(135deg,var(--metric-bg) 0%,var(--teal-dim) 100%);}
-.metric.card-orange{border-color:rgba(249,115,22,0.25);background:linear-gradient(135deg,var(--metric-bg) 0%,var(--orange-dim) 100%);}
+.metric.card-orange{border-color:rgba(224,82,82,0.22);background:linear-gradient(135deg,var(--metric-bg) 0%,var(--orange-dim) 100%);}
 [data-theme="light"] .metric.card-teal{border-color:rgba(14,116,144,0.25);}
-[data-theme="light"] .metric.card-orange{border-color:rgba(234,108,10,0.25);}
+[data-theme="light"] .metric.card-orange{border-color:rgba(217,64,64,0.22);}
 
 /* ─── MONTH GRID ─────────────────────────────────────*/
 .month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
@@ -186,7 +186,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px;}
 .badge i{font-size:10px;}
 .badge-ok{background:var(--teal-dim2);color:var(--brand);border:1px solid var(--brand-dark);}
-.badge-warn{background:var(--orange-dim);color:var(--accent-light);border:1px solid rgba(249,115,22,0.3);}
+.badge-warn{background:var(--orange-dim);color:var(--accent-light);border:1px solid rgba(224,82,82,0.25);}
 [data-theme="light"] .badge-warn{color:var(--accent);}
 .badge-noapl{background:rgba(128,128,128,0.12);color:var(--text3);border:1px solid var(--border);}
 
@@ -204,7 +204,7 @@ select.form-input option{background:var(--bg3);}
 .btn-primary i{font-size:17px;}
 .btn-primary:active{opacity:.85;}
 .btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border2);}
-.btn-danger-full{width:100%;padding:10px;background:transparent;color:var(--accent);border:1px solid rgba(249,115,22,0.3);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;margin-top:7px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-danger-full{width:100%;padding:10px;background:transparent;color:var(--accent);border:1px solid rgba(224,82,82,0.25);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;margin-top:7px;display:flex;align-items:center;justify-content:center;gap:5px;}
 .btn-danger-full i{font-size:14px;}
 
 /* ─── STATUS SELECT ──────────────────────────────────*/
@@ -495,6 +495,11 @@ select.form-input option{background:var(--bg3);}
 
       <!-- Vista Mes -->
       <div id="res-view-mes" style="display:none;">
+        <!-- Independent month selector for Resumen -->
+        <div class="card" style="margin-top:10px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:4px;"><i class="ph ph-calendar-blank"></i>Seleccionar mes</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;" id="res-month-grid"></div>
+        </div>
         <div class="card" style="margin-top:10px;">
           <div class="card-header">
             <span class="card-title"><i class="ph ph-calendar-check"></i>Resumen de <span id="res-mes-nombre"></span></span>
@@ -813,7 +818,7 @@ select.form-input option{background:var(--bg3);}
       <span class="badge badge-noapl" id="sheets-conn-badge"><i class="ph ph-plug"></i>No conectado</span>
     </div>
 
-    <div class="card" style="margin-bottom:10px;background:var(--orange-dim);border-color:rgba(249,115,22,.25);">
+    <div class="card" style="margin-bottom:10px;background:var(--orange-dim);border-color:rgba(224,82,82,.22);">
       <div class="card-header"><span class="card-title"><i class="ph ph-info"></i>Tu hoja ya está lista</span></div>
       <div style="font-size:12px;color:var(--text2);line-height:1.7;">
         <p>Dejamos preconfigurada la URL de tu Apps Script. Solo toca <strong>"Conectar y verificar"</strong> abajo para confirmar la conexión y empezar a sincronizar.</p>
@@ -867,7 +872,7 @@ select.form-input option{background:var(--bg3);}
       <p style="font-size:12px;color:var(--text3);">Detectamos el valor y la fecha automáticamente</p>
     </div>
 
-    <div class="card" style="margin-bottom:10px;background:var(--orange-dim);border-color:rgba(249,115,22,.25);">
+    <div class="card" style="margin-bottom:10px;background:var(--orange-dim);border-color:rgba(224,82,82,.22);">
       <div class="card-header"><span class="card-title"><i class="ph ph-info"></i>Por qué no es 100% automático</span></div>
       <div style="font-size:12px;color:var(--text2);line-height:1.7;">
         <p style="margin-bottom:6px;">Una app web (PWA) no puede leer tus SMS o notificaciones del sistema por sí sola — ni iOS ni Android lo permiten, por seguridad (es la misma protección que bloquea el malware bancario).</p>
@@ -916,7 +921,7 @@ select.form-input option{background:var(--bg3);}
 // ═══════════════════════════════════════════════════
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const CATS=['Almuerzo','Mercado','Mamá','Leo','Medicamentos','Veterinario','Spark','Gasolina','Villa de Leyva','Otros'];
-const CAT_COLORS=['#06b6d4','#0e7490','#f97316','#9b7ff4','#22d3ee','#fdba74','#e91e8c','#f59e0b','#34d399','#94a3b8'];
+const CAT_COLORS=['#06b6d4','#0e7490','#e05252','#9b7ff4','#22d3ee','#f08080','#e91e8c','#f59e0b','#34d399','#94a3b8'];
 const CAT_ICONS=['ph-fork-knife','ph-shopping-cart-simple','ph-heart','ph-graduation-cap','ph-first-aid','ph-paw-print','ph-car','ph-gas-pump','ph-map-pin','ph-dots-three-circle'];
 
 const DEF_STATE={
@@ -1150,10 +1155,12 @@ function renderPage(p){
   else if(p==='fijos')renderFij();
   else if(p==='variables')renderVar();
   else if(p==='resumen'){
+    // Sync the resumen-specific month to current global month on first entry
+    resMesActivo=S.mesActivo;
     const lbl=document.getElementById('res-tab-mes-label');
-    if(lbl)lbl.textContent=MESES[S.mesActivo].substring(0,3);
+    if(lbl)lbl.textContent=MESES[resMesActivo].substring(0,3);
     const mesView=document.getElementById('res-view-mes');
-    if(mesView&&mesView.style.display!=='none')renderResMes();
+    if(mesView&&mesView.style.display!=='none'){buildResMesGrid();renderResMes();}
     else renderRes();
   }
   else if(p==='calendario'){calState={year:new Date().getFullYear(),month:new Date().getMonth()};renderCalendario();}
@@ -1265,7 +1272,7 @@ function renderChartMain(){
     type:'bar',
     data:{labels:MESES.map(m=>m.substring(0,3)),datasets:[
       {label:'Ingresos',data:MESES.map((_,i)=>ingM(i)),backgroundColor:'rgba(6,182,212,0.78)',borderRadius:5,borderSkipped:false},
-      {label:'Gastos',data:MESES.map((_,i)=>gasM(i)),backgroundColor:'rgba(249,115,22,0.78)',borderRadius:5,borderSkipped:false}
+      {label:'Gastos',data:MESES.map((_,i)=>gasM(i)),backgroundColor:'rgba(224,82,82,0.80)',borderRadius:5,borderSkipped:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:9,weight:'600'}}},
@@ -1273,7 +1280,7 @@ function renderChartMain(){
   });
   document.getElementById('main-legend').innerHTML=`
     <div class="legend-row"><div class="legend-dot" style="background:#06b6d4"></div>Ingresos</div>
-    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div>Gastos</div>`;
+    <div class="legend-row"><div class="legend-dot" style="background:#e05252"></div>Gastos</div>`;
 }
 
 function renderChartCat(m){
@@ -1420,6 +1427,9 @@ function renderVar(){
 // ═══════════════════════════════════════════════════
 //  RESUMEN ANUAL
 // ═══════════════════════════════════════════════════
+// Independent month for the Resumen "Mes" tab — doesn't move the global pill
+let resMesActivo = S.mesActivo;
+
 function switchResTab(tab){
   const isAnual=tab==='anual';
   document.getElementById('res-view-anual').style.display=isAnual?'block':'none';
@@ -1428,11 +1438,26 @@ function switchResTab(tab){
   document.getElementById('res-tab-anual').style.color=isAnual?'#fff':'var(--text2)';
   document.getElementById('res-tab-mes').style.background=isAnual?'var(--bg3)':'var(--brand)';
   document.getElementById('res-tab-mes').style.color=isAnual?'var(--text2)':'#fff';
-  if(!isAnual)renderResMes();
+  if(!isAnual){ buildResMesGrid(); renderResMes(); }
+}
+
+function buildResMesGrid(){
+  const g=document.getElementById('res-month-grid');
+  if(!g)return;
+  g.innerHTML=MESES.map((m,i)=>`
+    <button onclick="selectResMes(${i})" style="padding:7px 2px;border-radius:8px;border:1px solid ${i===resMesActivo?'var(--brand)':'var(--border)'};background:${i===resMesActivo?'var(--teal-dim)':'var(--bg3)'};color:${i===resMesActivo?'var(--brand-light)':'var(--text2)'};font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;">
+      ${m.substring(0,3)}
+    </button>`).join('');
+}
+
+function selectResMes(i){
+  resMesActivo=i;
+  buildResMesGrid();
+  renderResMes();
 }
 
 function renderResMes(){
-  const m=S.mesActivo;
+  const m=resMesActivo;
   const ing=ingM(m),fij=fijM(m),vrb=varM(m),gas=fij+vrb,sal=ing-gas;
   document.getElementById('res-mes-nombre').textContent=MESES[m];
   document.getElementById('res-tab-mes-label').textContent=MESES[m].substring(0,3);
@@ -1471,7 +1496,7 @@ function renderResMes(){
   charts.mesBar=new Chart(document.getElementById('chart-mes-bar'),{
     type:'bar',
     data:{labels:['Ingresos','Gastos fijos','Gastos var.','Total gastos','Saldo'],
-      datasets:[{data:[ing,fij,vrb,gas,sal],backgroundColor:['rgba(6,182,212,0.7)','rgba(224,242,254,0.4)','rgba(249,115,22,0.7)','rgba(253,186,116,0.7)',sal>=0?'rgba(52,211,153,0.7)':'rgba(249,115,22,0.9)'],borderRadius:6,borderWidth:0}]},
+      datasets:[{data:[ing,fij,vrb,gas,sal],backgroundColor:['rgba(6,182,212,0.75)','rgba(100,180,210,0.35)','rgba(224,82,82,0.75)','rgba(224,82,82,0.5)',sal>=0?'rgba(26,188,156,0.75)':'rgba(224,82,82,0.88)'],borderRadius:6,borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
       scales:{x:{grid:{display:false},ticks:{color:tickColor(),font:{size:9,weight:'600'}}},y:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:9},callback:v=>'$'+Math.round(v/1000)+'K'}}}}
   });
@@ -1482,7 +1507,7 @@ function renderResMes(){
   let listaHTML='';
   if(pend.length){
     listaHTML+=`<div class="section-label" style="color:var(--accent);"><i class="ph ph-warning-circle"></i>Pendientes de pago (${pend.length})</div>`;
-    listaHTML+=pend.map(f=>`<div class="list-item"><div class="item-icon" style="background:rgba(249,115,22,0.12);"><i class="ph-fill ph-house" style="font-size:18px;color:var(--accent);"></i></div><div class="item-body"><div class="item-name">${f.item}</div><div class="item-sub">${f.ubi}${f.diaLimite?' · día '+f.diaLimite:''}</div></div><div class="item-right"><div class="item-amount" style="color:var(--accent);">${fmt(f.valor)}</div></div></div>`).join('');
+    listaHTML+=pend.map(f=>`<div class="list-item"><div class="item-icon" style="background:rgba(224,82,82,0.12);"><i class="ph-fill ph-house" style="font-size:18px;color:var(--accent);"></i></div><div class="item-body"><div class="item-name">${f.item}</div><div class="item-sub">${f.ubi}${f.diaLimite?' · día '+f.diaLimite:''}</div></div><div class="item-right"><div class="item-amount" style="color:var(--accent);">${fmt(f.valor)}</div></div></div>`).join('');
   }
   if(vars.length){
     listaHTML+=`<div class="section-label"><i class="ph ph-receipt"></i>Gastos variables (${vars.length})</div>`;
@@ -1501,7 +1526,7 @@ function renderRes(){
     type:'line',
     data:{labels:MESES.map(m=>m.substring(0,3)),datasets:[
       {label:'Ingresos',data:MESES.map((_,i)=>ingM(i)),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'#06b6d4',pointBorderWidth:0},
-      {label:'Gastos',data:MESES.map((_,i)=>gasM(i)),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'#f97316',pointBorderWidth:0}
+      {label:'Gastos',data:MESES.map((_,i)=>gasM(i)),borderColor:'#e05252',backgroundColor:'rgba(224,82,82,0.08)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'#e05252',pointBorderWidth:0}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:9,weight:'600'}}},
@@ -1802,7 +1827,7 @@ function buildReportHTML(m){
 
   const catRows=CATS.map((c,i)=>{
     const v=S.gastosVariables.filter(g=>g.mes===m&&g.cat===c).reduce((a,b)=>a+b.valor,0);
-    return v>0?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid ${border};font-size:12px;"><div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:${CAT_COLORS[i]};"></div><span style="color:${text2};">${c}</span></div><span style="font-weight:700;color:#f97316;">${fmt(v)}</span></div>`:'';
+    return v>0?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid ${border};font-size:12px;"><div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:${CAT_COLORS[i]};"></div><span style="color:${text2};">${c}</span></div><span style="font-weight:700;color:#e05252;">${fmt(v)}</span></div>`:'';
   }).join('');
 
   return`<div style="font-family:Inter,sans-serif;background:${bgCol};color:${textCol};padding:20px;width:390px;">
@@ -1813,8 +1838,8 @@ function buildReportHTML(m){
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
     <div style="background:${bg2};border-radius:10px;padding:11px 12px;border:1px solid ${border};"><div style="font-size:9px;color:${text3};font-weight:700;text-transform:uppercase;margin-bottom:4px;">Ingresos</div><div style="font-size:17px;font-weight:700;color:#22d3ee;">${fmt(ing)}</div></div>
-    <div style="background:${bg2};border-radius:10px;padding:11px 12px;border:1px solid ${border};"><div style="font-size:9px;color:${text3};font-weight:700;text-transform:uppercase;margin-bottom:4px;">Gastos</div><div style="font-size:17px;font-weight:700;color:#f97316;">${fmt(gas)}</div></div>
-    <div style="background:${bg2};border-radius:10px;padding:11px 12px;border:1px solid ${border};"><div style="font-size:9px;color:${text3};font-weight:700;text-transform:uppercase;margin-bottom:4px;">Saldo</div><div style="font-size:17px;font-weight:700;color:${sal>=0?'#06b6d4':'#f97316'};">${fmtS(sal)}</div></div>
+    <div style="background:${bg2};border-radius:10px;padding:11px 12px;border:1px solid ${border};"><div style="font-size:9px;color:${text3};font-weight:700;text-transform:uppercase;margin-bottom:4px;">Gastos</div><div style="font-size:17px;font-weight:700;color:#e05252;">${fmt(gas)}</div></div>
+    <div style="background:${bg2};border-radius:10px;padding:11px 12px;border:1px solid ${border};"><div style="font-size:9px;color:${text3};font-weight:700;text-transform:uppercase;margin-bottom:4px;">Saldo</div><div style="font-size:17px;font-weight:700;color:${sal>=0?'#06b6d4':'#e05252'};">${fmtS(sal)}</div></div>
     <div style="background:${bg2};border-radius:10px;padding:11px 12px;border:1px solid ${border};"><div style="font-size:9px;color:${text3};font-weight:700;text-transform:uppercase;margin-bottom:4px;">Gastos fijos</div><div style="font-size:17px;font-weight:700;color:${textCol};">${fmt(fij)}</div><div style="font-size:10px;color:${text3};">Variables: ${fmt(vrb)}</div></div>
   </div>
   <div style="background:${bg2};border-radius:10px;padding:12px;border:1px solid ${border};">
