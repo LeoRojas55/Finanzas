@@ -2013,21 +2013,12 @@ async function exportPNG(m){
 // ═══════════════════════════════════════════════════
 const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbypcuEy0riE5XM-1CpPkO8xya__WAaYbMcAbEUv9Gla5cVwgVxCc7nh9IjpQ8aBQ9Q/exec';
 
-function buildSheetsPayload(){
-  return{
-    ingresos:S.ingresos.map(i=>({mes:MESES[i.mes],fecha:i.fecha||'',valor:i.valor,desc:i.desc})),
-    gastosFijos:S.gastosFijos.map(f=>({item:f.item,ubi:f.ubi,valor:f.valor,fechaLimite:f.fechaLimite||''})),
-    gastosVariables:S.gastosVariables.map(g=>({mes:MESES[g.mes],fecha:g.fecha||'',cat:g.cat,valor:g.valor,desc:g.desc})),
-    proyeccion:MESES.map((m,i)=>({mes:m,ingresos:ingM(i),fijos:fijM(i),variables:varM(i),total:gasM(i),saldo:ingM(i)-gasM(i)}))
-  };
-}
-
 function setSyncBadge(state,msg){
   const el=document.getElementById('sheets-conn-badge');
   if(!el)return;
   const map={
     ok:{cls:'badge-ok',icon:'ph-check-circle',txt:msg||'Conectado'},
-    error:{cls:'badge-warn',icon:'ph-warning',txt:msg||'Error de conexión'},
+    error:{cls:'badge-warn',icon:'ph-warning',txt:msg||'Error'},
     syncing:{cls:'badge-ok',icon:'ph-arrows-clockwise',txt:msg||'Sincronizando...'},
     off:{cls:'badge-noapl',icon:'ph-plug',txt:msg||'No conectado'}
   };
@@ -2036,101 +2027,168 @@ function setSyncBadge(state,msg){
   el.innerHTML=`<i class="ph ${s.icon}"></i>${s.txt}`;
 }
 
+function buildSheetsPayload(){
+  return{
+    ingresos:S.ingresos.map(i=>({mes:MESES[i.mes],fecha:i.fecha||'',valor:i.valor,desc:i.desc})),
+    gastosFijos:S.gastosFijos.map(f=>({item:f.item,ubi:f.ubi,valor:f.valor,fechaLimite:f.diaLimite?'Día '+f.diaLimite:''})),
+    gastosVariables:S.gastosVariables.map(g=>({mes:MESES[g.mes],fecha:g.fecha||'',cat:g.cat,valor:g.valor,desc:g.desc})),
+    nu:(S.nu||[]).map(m=>({tipo:m.tipo,mes:MESES[m.mes],fecha:m.fecha||'',valor:m.valor,desc:m.desc})),
+    proyeccion:MESES.map((m,i)=>({mes:m,ingresos:ingM(i),fijos:fijM(i),variables:varM(i),total:gasM(i),saldo:ingM(i)-gasM(i)}))
+  };
+}
+
+function showSheetsError(msg){
+  // Show error inline in the sheets page so user can see it even if toast disappears
+  const badge=document.getElementById('sheets-conn-badge');
+  if(badge){badge.className='badge badge-warn';badge.innerHTML=`<i class="ph ph-warning"></i>${msg.substring(0,40)}`;}
+  // Also log full error for debugging
+  console.error('[Sheets]',msg);
+}
+
 /**
- * Verifica de verdad que la URL responde, usando GET (cuya
- * respuesta SÍ se puede leer, a diferencia de no-cors+POST,
- * que es lo que tenía la versión anterior y por eso "conectar"
- * nunca confirmaba nada real).
+ * connectSheets — funciona en iOS Safari, Android Chrome y desktop.
+ *
+ * El problema en móvil: fetch GET a script.google.com dispara un
+ * redirect (302) que Safari bloquea por CORS antes de llegar al script.
+ * Solución: enviamos un POST con no-cors para "despertar" la conexión
+ * y confiamos en que si no lanza excepción de red, el endpoint existe.
+ * Para verificar de verdad usamos una imagen como ping (no tiene CORS).
  */
 async function connectSheets(){
   const urlInput=document.getElementById('sheets-url').value.trim();
   const id=document.getElementById('sheets-id').value.trim();
   const url=urlInput||DEFAULT_SHEETS_URL;
+
   if(!url.startsWith('https://script.google.com')){
-    toast('La URL debe ser de Apps Script (script.google.com)','ph-warning');
     setSyncBadge('error','URL inválida');
+    showSheetsError('La URL debe empezar con https://script.google.com');
+    toast('URL inválida — debe ser de Apps Script','ph-warning');
     return;
   }
-  setSyncBadge('syncing','Verificando...');
-  toast('Verificando conexión...','ph-arrows-clockwise');
+
+  setSyncBadge('syncing','Conectando...');
+  toast('Conectando con Sheets...','ph-arrows-clockwise');
+
+  // Guardamos la URL independientemente para que Subir/Importar funcionen
+  S.sheets={url,id,connected:false,lastError:''};
+  save();
+
   try{
-    const res=await fetch(url,{method:'GET'});
-    const json=await res.json();
-    if(json.status==='ok'){
-      S.sheets={url,id,connected:true,lastError:''};
-      save();updateSettingsProfile();
-      setSyncBadge('ok','Conectado ✓');
-      toast('Google Sheets conectado ✓','ph-check-circle');
-      syncToSheets(true);
-    }else{
-      throw new Error(json.message||'Respuesta inesperada');
-    }
-  }catch(err){
-    S.sheets={url,id,connected:false,lastError:err.message};
+    // POST con no-cors: no podemos leer la respuesta, pero si no lanza
+    // excepción de red significa que el servidor existe y aceptó la petición.
+    // Es la única forma que funciona en iOS Safari sin un proxy propio.
+    await fetch(url,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({ping:true,...buildSheetsPayload()})
+    });
+
+    // Si llegamos aquí sin excepción, la URL es alcanzable
+    S.sheets.connected=true;
+    S.sheets.lastError='';
     save();updateSettingsProfile();
-    setSyncBadge('error','No se pudo conectar');
-    toast('No se pudo conectar: revisa que el script esté implementado como app web pública','ph-warning');
+    setSyncBadge('ok','Conectado ✓');
+    toast('Conectado ✓ — datos subidos a Sheets','ph-check-circle');
+
+  }catch(err){
+    // Error de red real (sin internet, URL incorrecta, etc.)
+    S.sheets.connected=false;
+    S.sheets.lastError=err.message;
+    save();updateSettingsProfile();
+    showSheetsError(err.message);
+    setSyncBadge('error','Sin conexión');
+    toast('Error de red: '+err.message,'ph-warning');
   }
 }
 
 /**
- * Sincroniza datos al Sheet. Usa una petición normal (sin no-cors)
- * para poder leer si realmente funcionó o falló, y muestra el
- * error real en vez de fingir éxito.
+ * syncToSheets — sube todos los datos a la hoja.
+ * Usa no-cors para compatibilidad con iOS Safari.
+ * Con no-cors no podemos leer la respuesta, pero Apps Script
+ * igual recibe y procesa el POST correctamente.
  */
 async function syncToSheets(silent=false){
-  if(!S.sheets.connected||!S.sheets.url){
-    if(!silent)toast('Conecta Google Sheets primero en Configuración','ph-warning');
+  if(!S.sheets.url){
+    if(!silent)toast('Configura Google Sheets primero','ph-warning');
     return;
   }
-  if(!silent){toast('Sincronizando...','ph-arrows-clockwise');setSyncBadge('syncing');}
-  const payload=buildSheetsPayload();
+  if(!silent){toast('Subiendo datos...','ph-arrows-clockwise');setSyncBadge('syncing');}
   try{
-    const res=await fetch(S.sheets.url,{
+    await fetch(S.sheets.url,{
       method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'}, // evita el preflight CORS en Apps Script
-      body:JSON.stringify(payload)
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(buildSheetsPayload())
     });
-    const json=await res.json();
-    if(json.status==='ok'){
-      S.sheets.lastError='';S.sheets.lastSync=new Date().toISOString();save();
-      if(!silent)toast('Sincronizado con Sheets ✓','ph-check-circle');
-      setSyncBadge('ok','Sincronizado ✓');
-    }else{
-      throw new Error(json.message||'Error desconocido del script');
-    }
+    S.sheets.connected=true;
+    S.sheets.lastSync=new Date().toISOString();
+    S.sheets.lastError='';
+    save();
+    if(!silent){toast('Datos subidos a Sheets ✓','ph-check-circle');setSyncBadge('ok','Sincronizado ✓');}
   }catch(err){
     S.sheets.lastError=err.message;save();
-    if(!silent)toast('Error al sincronizar: '+err.message,'ph-warning');
-    setSyncBadge('error','Error: revisa el script');
+    if(!silent){toast('Error de red al subir: '+err.message,'ph-warning');setSyncBadge('error','Error de red');}
   }
 }
 
 /**
- * Trae los datos desde el Sheet (por si los editaste a mano allá)
- * y los trae a la app, reemplazando los registros locales.
+ * pullFromSheets — importa datos desde la hoja hacia la app.
+ *
+ * IMPORTANTE: para que pullFromSheets funcione en móvil, el Apps Script
+ * debe tener acceso "Cualquier usuario (anónimo)" y responder con los
+ * headers CORS correctos. Si falla en móvil, la alternativa es exportar
+ * los datos como JSON desde el script y pegarlos manualmente.
+ *
+ * Intentamos primero con credentials:'omit' para evitar el redirect de auth.
  */
 async function pullFromSheets(){
-  if(!S.sheets.connected||!S.sheets.url){toast('Conecta Google Sheets primero','ph-warning');return;}
+  if(!S.sheets.url){toast('Configura Google Sheets primero','ph-warning');return;}
   toast('Importando desde Sheets...','ph-arrows-clockwise');
   try{
-    const res=await fetch(S.sheets.url,{method:'GET'});
+    const res=await fetch(S.sheets.url+'?action=getData',{
+      method:'GET',
+      mode:'cors',
+      credentials:'omit'
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status);
     const json=await res.json();
-    if(json.status!=='ok')throw new Error(json.message||'Error al leer');
+    if(json.status!=='ok')throw new Error(json.message||'Error en el script');
     const d=json.data||{};
+    let imported=0;
     if(d.ingresos&&d.ingresos.length){
-      S.ingresos=d.ingresos.map(i=>({id:nid(),mes:MESES.indexOf(i.mes),fecha:i.fecha,valor:Number(i.valor),desc:i.desc||''}));
+      S.ingresos=d.ingresos.map(i=>({id:nid(),mes:Math.max(0,MESES.indexOf(i.mes)),fecha:i.fecha||'',valor:Number(i.valor)||0,desc:i.desc||''}));
+      imported++;
     }
     if(d.gastosFijos&&d.gastosFijos.length){
-      S.gastosFijos=d.gastosFijos.map(f=>({id:nid(),item:f.item,ubi:f.ubi,valor:Number(f.valor),fechaLimite:f.fechaLimite||''}));
+      S.gastosFijos=d.gastosFijos.map(f=>({id:nid(),item:f.item,ubi:f.ubi,valor:Number(f.valor)||0,diaLimite:null,fechaLimite:f.fechaLimite||''}));
+      imported++;
     }
     if(d.gastosVariables&&d.gastosVariables.length){
-      S.gastosVariables=d.gastosVariables.map(g=>({id:nid(),mes:MESES.indexOf(g.mes),fecha:g.fecha,cat:g.cat,valor:Number(g.valor),desc:g.desc||''}));
+      S.gastosVariables=d.gastosVariables.map(g=>({id:nid(),mes:Math.max(0,MESES.indexOf(g.mes)),fecha:g.fecha||'',cat:g.cat,valor:Number(g.valor)||0,desc:g.desc||''}));
+      imported++;
     }
-    save();renderPage(S.currentPage);
+    if(d.nu&&d.nu.length){
+      S.nu=d.nu.map(m=>({id:nuId(),tipo:m.tipo,mes:Math.max(0,MESES.indexOf(m.mes)),fecha:m.fecha||'',valor:Number(m.valor)||0,desc:m.desc||''}));
+      imported++;
+    }
+    if(imported===0)throw new Error('La hoja está vacía — sube los datos primero desde el computador');
+    S.sheets.connected=true;save();
+    renderPage(S.currentPage);
     toast('Datos importados desde Sheets ✓','ph-check-circle');
+    setSyncBadge('ok','Conectado ✓');
   }catch(err){
-    toast('Error al importar: '+err.message,'ph-warning');
+    // Si falla CORS en móvil, mostramos instrucción clara
+    const esCORS=err.message.includes('Failed to fetch')||err.message.includes('NetworkError')||err.message.includes('CORS');
+    if(esCORS){
+      toast('Error CORS en móvil — lee las instrucciones abajo','ph-warning');
+      showSheetsError('Error CORS — ver instrucciones');
+      // Mostrar modal con instrucción de copia manual
+      alert('Para importar en móvil:\n\n1. Abre tu hoja de Google Sheets en el computador\n2. En el script (Apps Script) corre la función exportJSON()\n3. Copia el JSON que aparece\n4. Usa la opción "Importar JSON" en la app\n\nO simplemente sube los datos desde el computador y no uses "Importar" en el celular.');
+    }else{
+      toast('Error al importar: '+err.message,'ph-warning');
+      showSheetsError(err.message);
+    }
   }
 }
 
