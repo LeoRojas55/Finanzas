@@ -993,14 +993,14 @@ select.form-input option{background:var(--bg3);}
 
   </div>
 
-  <!-- Nu FAB -->
-  <button onclick="openNuModal('entrada')" style="position:fixed;bottom:calc(16px + max(6px,env(safe-area-inset-bottom)));right:16px;width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#5b0f9e,#820ad1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(130,10,209,0.5);z-index:160;">
+  <!-- Nu FAB — only visible when Nu view is open, controlled by toggleNuView() -->
+  <button id="nu-fab" onclick="openNuModal('entrada')" style="display:none;position:fixed;bottom:calc(16px + max(6px,env(safe-area-inset-bottom)));right:16px;width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#5b0f9e,#820ad1);border:none;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(130,10,209,0.5);z-index:170;">
     <i class="ph ph-plus-bold" style="font-size:22px;color:#fff;"></i>
   </button>
 </div>
 
-<!-- Nu MODAL (entrada/gasto) -->
-<div class="modal-overlay" id="nu-modal" onclick="closeModal('nu-modal')">
+<!-- Nu MODAL (entrada/gasto) — z-index 200 so it appears above nu-view (150) -->
+<div class="modal-overlay" id="nu-modal" onclick="closeModal('nu-modal')" style="z-index:200;">
   <div class="modal" onclick="event.stopPropagation()" style="border-top-color:#820ad1;">
     <div class="modal-handle"></div>
     <div class="modal-title" id="nu-modal-title" style="color:#c084fc;">
@@ -2286,22 +2286,45 @@ let eNuId = null;
 
 function nuId(){ return S.nextNuId++; }
 
+// Guard: if the user had old localStorage without nu array, add it now
+if(!S.nu) S.nu = [];
+if(!S.nextNuId) S.nextNuId = 200;
+
 /** Open / close the Nu overlay */
 function toggleNuView(){
   nuViewOpen = !nuViewOpen;
-  const el = document.getElementById('nu-view');
+  const el  = document.getElementById('nu-view');
   const btn = document.getElementById('btn-nu-view');
-  el.style.display = nuViewOpen ? 'block' : 'none';
-  if(btn) btn.style.background = nuViewOpen ? 'rgba(130,10,209,0.2)' : 'var(--bg3)';
-  if(nuViewOpen){ populateNuMesFilter(); renderNuDash(); renderNuMovimientos(); renderNuTransfers(); }
+  const fab = document.getElementById('nu-fab');
+  const mainFab = document.getElementById('fab-btn');
+
+  el.style.display  = nuViewOpen ? 'block' : 'none';
+
+  // Nu FAB: flex when Nu open, none when closed
+  if(fab) fab.style.display = nuViewOpen ? 'flex' : 'none';
+
+  // Hide/show the main app FAB so they don't overlap
+  if(mainFab) mainFab.style.display = nuViewOpen ? 'none' : (S.currentPage==='resumen'||S.currentPage==='calendario' ? 'none' : 'flex');
+
+  // Highlight the Nu button in topbar
+  if(btn){
+    btn.style.background  = nuViewOpen ? 'rgba(130,10,209,0.25)' : 'var(--bg3)';
+    btn.style.borderColor = nuViewOpen ? 'rgba(130,10,209,0.5)' : 'var(--border)';
+  }
+
+  if(nuViewOpen){
+    populateNuMesFilter();
+    renderNuDash();
+    renderNuMovimientos();
+    renderNuTransfers();
+  }
 }
 
 /** Compute Nu balance from S.nu array + transfers from gastosVariables cat='Nu' */
 function nuSaldoTotal(){
-  // Direct movements in Nu
-  const directIn  = S.nu.filter(m=>m.tipo==='entrada').reduce((a,b)=>a+b.valor,0);
-  const directOut = S.nu.filter(m=>m.tipo==='gasto').reduce((a,b)=>a+b.valor,0);
-  // Transfers: gastos variables categorized as Nu count as entries into Nu
+  const nu = S.nu || [];
+  const directIn  = nu.filter(m=>m.tipo==='entrada').reduce((a,b)=>a+b.valor,0);
+  const directOut = nu.filter(m=>m.tipo==='gasto').reduce((a,b)=>a+b.valor,0);
   const transfers = S.gastosVariables.filter(g=>g.cat==='Nu').reduce((a,b)=>a+b.valor,0);
   return { directIn, directOut, transfers, saldo: directIn - directOut + transfers };
 }
@@ -2324,6 +2347,7 @@ function populateNuMesFilter(){
 }
 
 function renderNuMovimientos(){
+  if(!S.nu) S.nu = [];
   const filtroMes = parseInt(document.getElementById('nu-mes-filter').value);
   let items = [...S.nu];
   if(filtroMes >= 0) items = items.filter(m => m.mes === filtroMes);
@@ -2424,6 +2448,7 @@ function editNuMovimiento(id){
 }
 
 function saveNuMovimiento(){
+  if(!S.nu) S.nu = [];
   const tipo  = document.getElementById('nu-tipo').value;
   const mes   = parseInt(document.getElementById('nu-mes').value);
   const fecha = document.getElementById('nu-fecha').value || todayStr();
@@ -2451,7 +2476,7 @@ function confirmDeleteNu(id){
 }
 function deleteNuMovimiento(){
   if(!confirm('¿Eliminar este movimiento Nu?')) return;
-  S.nu = S.nu.filter(x=>x.id!==eNuId);
+  S.nu = (S.nu||[]).filter(x=>x.id!==eNuId);
   save();
   closeModal('nu-modal');
   renderNuDash();
@@ -2473,4 +2498,3 @@ checkMensualReset();
 </script>
 </body>
 </html>
-
