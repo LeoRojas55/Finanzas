@@ -381,6 +381,9 @@ select.form-input option{background:var(--bg3);}
         <span id="month-pill-label">Junio</span>
         <i class="ph ph-caret-down" style="font-size:10px;opacity:.6;"></i>
       </button>
+      <button class="btn-topbar btn-nu" onclick="toggleNuView()" id="btn-nu-view" aria-label="Ver cuenta Nu" title="Cuenta Nu">
+        <span style="font-size:11px;font-weight:800;letter-spacing:-0.5px;color:#820ad1;">Nu</span>
+      </button>
       <button class="btn-topbar" onclick="openSettings()" aria-label="Configuración">
         <i class="ph ph-gear"></i>
       </button>
@@ -596,7 +599,7 @@ select.form-input option{background:var(--bg3);}
       <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-calendar"></i>Mes</label><select class="form-input" id="var-mes"></select></div>
       <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-tag"></i>Categoría</label>
         <select class="form-input" id="var-cat">
-          <option>Almuerzo</option><option>Mercado</option><option>Medicamentos</option><option>Leo</option><option>Mamá</option><option>Veterinario</option><option>Spark</option><option>Gasolina</option><option>Villa de Leyva</option><option>Otros</option>
+          <option>Almuerzo</option><option>Mercado</option><option>Mamá</option><option>Leo</option><option>Medicamentos</option><option>Veterinario</option><option>Spark</option><option>Gasolina</option><option>Villa de Leyva</option><option>Nu</option><option>Otros</option>
         </select>
       </div>
     </div>
@@ -894,7 +897,7 @@ select.form-input option{background:var(--bg3);}
       <div class="form-row" style="margin-top:10px;">
         <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-tag"></i>Categoría</label>
           <select class="form-input" id="sms-cat">
-            <option>Almuerzo</option><option>Mercado</option><option>Medicamentos</option><option>Leo</option><option>Mamá</option><option>Veterinario</option><option>Spark</option><option>Gasolina</option><option>Villa de Leyva</option><option selected>Otros</option>
+            <option>Almuerzo</option><option>Mercado</option><option>Mamá</option><option>Leo</option><option>Medicamentos</option><option>Veterinario</option><option>Spark</option><option>Gasolina</option><option>Villa de Leyva</option><option>Nu</option><option selected>Otros</option>
           </select>
         </div>
         <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-calendar"></i>Mes</label><select class="form-input" id="sms-mes"></select></div>
@@ -912,23 +915,151 @@ select.form-input option{background:var(--bg3);}
   </div>
 </div>
 
+<!-- ═══════════ NU ACCOUNT VIEW ═══════════ -->
+<div id="nu-view" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:150;overflow-y:auto;">
+
+  <!-- Nu topbar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;background:#1a0533;border-bottom:2px solid #820ad1;position:sticky;top:0;z-index:10;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#5b0f9e,#820ad1);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:14px;font-weight:900;color:#fff;letter-spacing:-1px;">Nu</span>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#e9d5ff;">Cuenta Nu</div>
+        <div style="font-size:10px;color:#a855f7;font-weight:500;">Fondo de ahorros</div>
+      </div>
+    </div>
+    <button onclick="toggleNuView()" style="width:32px;height:32px;border-radius:9px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);color:#c084fc;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+      <i class="ph ph-x" style="font-size:16px;"></i>
+    </button>
+  </div>
+
+  <div style="padding:14px 14px 100px;">
+
+    <!-- Saldo card -->
+    <div id="nu-saldo-card" style="background:linear-gradient(135deg,#1a0533,#2d0a5e);border:1px solid rgba(130,10,209,0.4);border-radius:16px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(168,85,247,0.1);"></div>
+      <div style="position:absolute;bottom:-30px;left:-10px;width:80px;height:80px;border-radius:50%;background:rgba(130,10,209,0.08);"></div>
+      <div style="font-size:11px;font-weight:700;color:#a855f7;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">Saldo disponible</div>
+      <div id="nu-saldo-val" style="font-size:32px;font-weight:800;color:#e9d5ff;letter-spacing:-1px;">$0</div>
+      <div id="nu-saldo-sub" style="font-size:11px;color:#7c3aed;margin-top:4px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;">
+        <div style="background:rgba(168,85,247,0.12);border-radius:9px;padding:10px 8px;text-align:center;">
+          <div style="font-size:9px;color:#a855f7;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Entradas</div>
+          <div id="nu-total-in" style="font-size:13px;font-weight:700;color:#c084fc;">$0</div>
+        </div>
+        <div style="background:rgba(168,85,247,0.12);border-radius:9px;padding:10px 8px;text-align:center;">
+          <div style="font-size:9px;color:#a855f7;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Gastos</div>
+          <div id="nu-total-out" style="font-size:13px;font-weight:700;color:#e05252;">$0</div>
+        </div>
+        <div style="background:rgba(168,85,247,0.12);border-radius:9px;padding:10px 8px;text-align:center;">
+          <div style="font-size:9px;color:#a855f7;font-weight:700;text-transform:uppercase;margin-bottom:3px;">Aportes app</div>
+          <div id="nu-total-transfers" style="font-size:13px;font-weight:700;color:#818cf8;">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick action buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <button onclick="openNuModal('entrada')" style="padding:12px;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);border:1px solid rgba(29,78,216,0.4);border-radius:12px;color:#bfdbfe;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <i class="ph ph-plus-circle" style="font-size:18px;"></i> Agregar entrada
+      </button>
+      <button onclick="openNuModal('gasto')" style="padding:12px;background:linear-gradient(135deg,#3b0764,#6b21a8);border:1px solid rgba(168,85,247,0.4);border-radius:12px;color:#e9d5ff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <i class="ph ph-minus-circle" style="font-size:18px;"></i> Registrar gasto
+      </button>
+    </div>
+
+    <!-- Movimientos por mes -->
+    <div style="background:var(--card-bg);border:1px solid rgba(130,10,209,0.2);border-radius:14px;padding:14px 15px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:700;color:#a855f7;text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:5px;">
+          <i class="ph ph-list-bullets"></i> Movimientos
+        </div>
+        <select id="nu-mes-filter" onchange="renderNuMovimientos()" style="padding:4px 8px;background:rgba(130,10,209,0.15);border:1px solid rgba(130,10,209,0.3);border-radius:7px;color:#c084fc;font-size:11px;font-family:inherit;outline:none;cursor:pointer;">
+          <option value="-1">Todos los meses</option>
+        </select>
+      </div>
+      <div id="nu-movimientos-list"></div>
+    </div>
+
+    <!-- Transferencias automáticas desde app -->
+    <div style="background:var(--card-bg);border:1px solid rgba(130,10,209,0.15);border-radius:14px;padding:14px 15px;">
+      <div style="font-size:10px;font-weight:700;color:#a855f7;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;display:flex;align-items:center;gap:5px;">
+        <i class="ph ph-arrows-left-right"></i> Aportes desde gastos variables
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Gastos categorizados como "Nu" en la app principal — se cuentan como aportes a esta cuenta.</div>
+      <div id="nu-transfers-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Nu FAB -->
+  <button onclick="openNuModal('entrada')" style="position:fixed;bottom:calc(16px + max(6px,env(safe-area-inset-bottom)));right:16px;width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#5b0f9e,#820ad1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(130,10,209,0.5);z-index:160;">
+    <i class="ph ph-plus-bold" style="font-size:22px;color:#fff;"></i>
+  </button>
+</div>
+
+<!-- Nu MODAL (entrada/gasto) -->
+<div class="modal-overlay" id="nu-modal" onclick="closeModal('nu-modal')">
+  <div class="modal" onclick="event.stopPropagation()" style="border-top-color:#820ad1;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="nu-modal-title" style="color:#c084fc;">
+      <i class="ph ph-plus-circle"></i> Nueva entrada Nu
+    </div>
+    <div class="form-section">
+      <label class="form-label" style="color:#a855f7;"><i class="ph ph-tag" style="color:#820ad1;"></i>Tipo</label>
+      <select class="form-input" id="nu-tipo" onchange="updateNuModalType()" style="border-color:rgba(130,10,209,0.3);background:rgba(130,10,209,0.1);">
+        <option value="entrada">↑ Entrada (depósito, ingreso)</option>
+        <option value="gasto">↓ Gasto (retiro, pago desde Nu)</option>
+      </select>
+    </div>
+    <div class="form-row" style="margin-bottom:13px;">
+      <div class="form-section" style="margin:0;">
+        <label class="form-label" style="color:#a855f7;"><i class="ph ph-calendar" style="color:#820ad1;"></i>Mes</label>
+        <select class="form-input" id="nu-mes" style="border-color:rgba(130,10,209,0.3);"></select>
+      </div>
+      <div class="form-section" style="margin:0;">
+        <label class="form-label" style="color:#a855f7;"><i class="ph ph-calendar-check" style="color:#820ad1;"></i>Fecha</label>
+        <input class="form-input" type="date" id="nu-fecha" style="border-color:rgba(130,10,209,0.3);">
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label" style="color:#a855f7;"><i class="ph ph-currency-circle-dollar" style="color:#820ad1;"></i>Valor</label>
+      <input class="form-input" type="number" id="nu-valor" placeholder="0" style="border-color:rgba(130,10,209,0.3);">
+    </div>
+    <div class="form-section">
+      <label class="form-label" style="color:#a855f7;"><i class="ph ph-pencil-line" style="color:#820ad1;"></i>Descripción</label>
+      <input class="form-input" type="text" id="nu-desc" placeholder="Ej: Ahorro mensual, Pago servicio..." style="border-color:rgba(130,10,209,0.3);">
+    </div>
+    <button class="btn-primary" id="nu-save-btn" onclick="saveNuMovimiento()" style="background:linear-gradient(135deg,#5b0f9e,#820ad1);">
+      <i class="ph ph-floppy-disk"></i> Guardar
+    </button>
+    <button class="btn-danger-full" id="nu-del-btn" style="display:none;color:#a855f7;border-color:rgba(130,10,209,0.3);" onclick="deleteNuMovimiento()">
+      <i class="ph ph-trash"></i> Eliminar movimiento
+    </button>
+  </div>
+</div>
+
 <!-- REPORT PRINT AREA (hidden, used for PDF/PNG export) -->
 <div id="report-print-area" style="position:fixed;left:-9999px;top:0;width:390px;background:var(--bg2);padding:20px;font-family:Inter,sans-serif;color:var(--text);"></div>
+
 
 <script>
 // ═══════════════════════════════════════════════════
 //  STATE & CONSTANTS
 // ═══════════════════════════════════════════════════
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const CATS=['Almuerzo','Mercado','Mamá','Leo','Medicamentos','Veterinario','Spark','Gasolina','Villa de Leyva','Otros'];
-const CAT_COLORS=['#06b6d4','#0e7490','#e05252','#9b7ff4','#22d3ee','#f08080','#e91e8c','#f59e0b','#34d399','#94a3b8'];
-const CAT_ICONS=['ph-fork-knife','ph-shopping-cart-simple','ph-heart','ph-graduation-cap','ph-first-aid','ph-paw-print','ph-car','ph-gas-pump','ph-map-pin','ph-dots-three-circle'];
+const CATS=['Almuerzo','Mercado','Mamá','Leo','Medicamentos','Veterinario','Spark','Gasolina','Villa de Leyva','Nu','Otros'];
+const CAT_COLORS=['#06b6d4','#0e7490','#a855f7','#9b7ff4','#22d3ee','#f08080','#e91e8c','#f59e0b','#34d399','#820ad1','#94a3b8'];
+const CAT_ICONS=['ph-fork-knife','ph-shopping-cart-simple','ph-heart','ph-graduation-cap','ph-first-aid','ph-paw-print','ph-car','ph-gas-pump','ph-map-pin','ph-piggy-bank','ph-dots-three-circle'];
 
 const DEF_STATE={
   mesActivo:5,currentPage:'dashboard',
   theme:'dark',
   profile:{nombre:'',email:'',tel:'',ciudad:'Tunja',moneda:'COP'},
   sheets:{url:'https://script.google.com/macros/s/AKfycbypcuEy0riE5XM-1CpPkO8xya__WAaYbMcAbEUv9Gla5cVwgVxCc7nh9IjpQ8aBQ9Q/exec',id:'',connected:false},
+  nu:[],  // {id, tipo:'entrada'|'gasto', mes, fecha, valor, desc}
+  nextNuId:200,
   ingresos:[
     {id:1,mes:0,valor:2151640,desc:'05 de enero'},{id:2,mes:0,valor:1600000,desc:'13 de enero'},{id:3,mes:0,valor:130000,desc:'3 de febrero'},{id:4,mes:0,valor:-260000,desc:'Descuento diciembre'},{id:5,mes:0,valor:-270880,desc:'Devolución febrero'},
     {id:6,mes:1,valor:270880,desc:'Pago'},{id:7,mes:1,valor:3500000,desc:'Principal'},{id:8,mes:1,valor:-522772,desc:'Descuento marzo'},
@@ -1687,9 +1818,9 @@ async function exportExcel(){
     dato:{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:{rgb:'0D2D45'}},alignment:{horizontal:'right'},border:{left:{style:'thin',color:{rgb:'1E3D55'}},right:{style:'thin',color:{rgb:'1E3D55'}}}},
     datoLabel:{font:{sz:9,color:{rgb:'BAE6FD'}},fill:{fgColor:{rgb:'0D2D45'}},border:{left:{style:'medium',color:{rgb:'06B6D4'}}}},
     datoRight:{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:{rgb:'0D2D45'}},alignment:{horizontal:'right'},border:{right:{style:'medium',color:{rgb:'06B6D4'}}}},
-    total:{font:{bold:true,sz:10,color:{rgb:'F97316'}},fill:{fgColor:{rgb:'0B2035'}},alignment:{horizontal:'right'},border:{top:{style:'medium',color:{rgb:'F97316'}},bottom:{style:'medium',color:{rgb:'F97316'}},left:{style:'thin',color:{rgb:'1E3D55'}},right:{style:'thin',color:{rgb:'1E3D55'}}}},
-    totalLabel:{font:{bold:true,sz:10,color:{rgb:'F97316'}},fill:{fgColor:{rgb:'0B2035'}},border:{top:{style:'medium',color:{rgb:'F97316'}},bottom:{style:'medium',color:{rgb:'F97316'}},left:{style:'medium',color:{rgb:'06B6D4'}}}},
-    totalRight:{font:{bold:true,sz:10,color:{rgb:'F97316'}},fill:{fgColor:{rgb:'0B2035'}},alignment:{horizontal:'right'},border:{top:{style:'medium',color:{rgb:'F97316'}},bottom:{style:'medium',color:{rgb:'F97316'}},right:{style:'medium',color:{rgb:'06B6D4'}}}},
+    total:{font:{bold:true,sz:10,color:{rgb:'E05252'}},fill:{fgColor:{rgb:'0B2035'}},alignment:{horizontal:'right'},border:{top:{style:'medium',color:{rgb:'E05252'}},bottom:{style:'medium',color:{rgb:'E05252'}},left:{style:'thin',color:{rgb:'1E3D55'}},right:{style:'thin',color:{rgb:'1E3D55'}}}},
+    totalLabel:{font:{bold:true,sz:10,color:{rgb:'E05252'}},fill:{fgColor:{rgb:'0B2035'}},border:{top:{style:'medium',color:{rgb:'E05252'}},bottom:{style:'medium',color:{rgb:'E05252'}},left:{style:'medium',color:{rgb:'06B6D4'}}}},
+    totalRight:{font:{bold:true,sz:10,color:{rgb:'E05252'}},fill:{fgColor:{rgb:'0B2035'}},alignment:{horizontal:'right'},border:{top:{style:'medium',color:{rgb:'E05252'}},bottom:{style:'medium',color:{rgb:'E05252'}},right:{style:'medium',color:{rgb:'06B6D4'}}}},
     vacio:{fill:{fgColor:{rgb:'08192E'}}},
   };
   function cell(v,s){return{v,s,t:typeof v==='number'?'n':'s'};}
@@ -1715,14 +1846,14 @@ async function exportExcel(){
     setCell(ws1,r,1,numFmt(ing,{font:{sz:9,color:{rgb:'06B6D4'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
     setCell(ws1,r,2,numFmt(fij,{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
     setCell(ws1,r,3,numFmt(vrb,{font:{sz:9,color:{rgb:'E0F2FE'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
-    setCell(ws1,r,4,numFmt(gas,{font:{sz:9,color:{rgb:'FDBA74'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
-    setCell(ws1,r,5,numFmt(sal,{font:{bold:true,sz:9,color:{rgb:sal>=0?'34D399':'F97316'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:{...bord,right:{style:'medium',color:{rgb:'06B6D4'}}}}));r++;
+    setCell(ws1,r,4,numFmt(gas,{font:{sz:9,color:{rgb:'F08080'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:bord}));
+    setCell(ws1,r,5,numFmt(sal,{font:{bold:true,sz:9,color:{rgb:sal>=0?'34D399':'E05252'}},fill:{fgColor:bgMes},alignment:{horizontal:'right'},border:{...bord,right:{style:'medium',color:{rgb:'06B6D4'}}}}));r++;
     for(let c=0;c<6;c++)setCell(ws1,r,c,cell('',ST.vacio));ws1['!merges'].push({s:{r:r,c:0},e:{r:r,c:5}});r++;
   });
   const totIng=MESES.reduce((_,__,i)=>_+ingM(i),0),totFij=MESES.reduce((_,__,i)=>_+fijM(i),0),totVrb=MESES.reduce((_,__,i)=>_+varM(i),0),totGas=totFij+totVrb;
   setCell(ws1,r,0,cell('TOTAL ANUAL',ST.totalLabel));
   setCell(ws1,r,1,numFmt(totIng,ST.total));setCell(ws1,r,2,numFmt(totFij,ST.total));setCell(ws1,r,3,numFmt(totVrb,ST.total));setCell(ws1,r,4,numFmt(totGas,ST.total));
-  setCell(ws1,r,5,numFmt(totIng-totGas,{...ST.totalRight,font:{bold:true,sz:10,color:{rgb:totIng-totGas>=0?'34D399':'F97316'}}}));
+  setCell(ws1,r,5,numFmt(totIng-totGas,{...ST.totalRight,font:{bold:true,sz:10,color:{rgb:totIng-totGas>=0?'34D399':'E05252'}}}));
   ws1['!cols']=[{wch:20},{wch:16},{wch:16},{wch:18},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws1,'Resumen Anual');
 
@@ -1793,7 +1924,7 @@ async function exportExcel(){
   const ingMes=ingM(ma),fijMes=fijM(ma),varMes=varM(ma),gasMes=fijMes+varMes,salMes=ingMes-gasMes;
   setCell(ws6,r6,0,cell(`RESUMEN · ${MESES[ma].toUpperCase()} ${year}`,ST.titulo));for(let c=1;c<4;c++)setCell(ws6,r6,c,cell('',ST.titulo));ws6['!merges'].push({s:{r:0,c:0},e:{r:0,c:3}});r6++;
   setCell(ws6,r6,0,cell('',ST.vacio));ws6['!merges'].push({s:{r:1,c:0},e:{r:1,c:3}});r6++;
-  [['INGRESOS',ingMes,'06B6D4'],['GASTOS FIJOS',fijMes,'E0F2FE'],['GASTOS VARIABLES',varMes,'E0F2FE'],['TOTAL GASTOS',gasMes,'FDBA74'],['SALDO',salMes,salMes>=0?'34D399':'F97316']].forEach(([lbl,val,col])=>{
+  [['INGRESOS',ingMes,'06B6D4'],['GASTOS FIJOS',fijMes,'E0F2FE'],['GASTOS VARIABLES',varMes,'E0F2FE'],['TOTAL GASTOS',gasMes,'F08080'],['SALDO',salMes,salMes>=0?'34D399':'E05252']].forEach(([lbl,val,col])=>{
     setCell(ws6,r6,0,cell(lbl,{font:{bold:true,sz:10,color:{rgb:'7ECFE8'}},fill:{fgColor:{rgb:'0A2438'}},border:{left:{style:'medium',color:{rgb:'06B6D4'}},bottom:{style:'thin',color:{rgb:'1E3D55'}}}}));
     setCell(ws6,r6,1,numFmt(val,{font:{bold:true,sz:10,color:{rgb:col}},fill:{fgColor:{rgb:'0D2D45'}},alignment:{horizontal:'right'},border:{bottom:{style:'thin',color:{rgb:'1E3D55'}}}}));
     for(let c=2;c<4;c++)setCell(ws6,r6,c,cell('',{fill:{fgColor:{rgb:'0D2D45'}},border:{right:c===3?{style:'medium',color:{rgb:'06B6D4'}}:{},bottom:{style:'thin',color:{rgb:'1E3D55'}}}}));r6++;
@@ -1804,7 +1935,7 @@ async function exportExcel(){
   if(gvMes.length){
     setCell(ws6,r6,0,cell('GASTOS VARIABLES DEL MES',ST.mesHeader));for(let c=1;c<4;c++)setCell(ws6,r6,c,cell('',ST.mesHeader));ws6['!merges'].push({s:{r:r6,c:0},e:{r:r6,c:3}});r6++;
     ['FECHA','CATEGORÍA','DESCRIPCIÓN','VALOR'].forEach((h,c)=>setCell(ws6,r6,c,cell(h,ST.colHeader)));r6++;
-    gvMes.forEach(g=>{setCell(ws6,r6,0,cell(g.fecha||'—',ST.datoLabel));setCell(ws6,r6,1,cell(g.cat,ST.dato));setCell(ws6,r6,2,cell(g.desc||'—',ST.dato));setCell(ws6,r6,3,numFmt(g.valor,{...ST.dato,font:{sz:9,color:{rgb:'FDBA74'}}}));r6++;});
+    gvMes.forEach(g=>{setCell(ws6,r6,0,cell(g.fecha||'—',ST.datoLabel));setCell(ws6,r6,1,cell(g.cat,ST.dato));setCell(ws6,r6,2,cell(g.desc||'—',ST.dato));setCell(ws6,r6,3,numFmt(g.valor,{...ST.dato,font:{sz:9,color:{rgb:'F08080'}}}));r6++;});
   }
   ws6['!cols']=[{wch:24},{wch:16},{wch:28},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws6,MESES[ma].substring(0,3)+' '+year);
@@ -2147,6 +2278,189 @@ style.textContent='@keyframes spin{from{transform:rotate(0deg)}to{transform:rota
 document.head.appendChild(style);
 
 // ═══════════════════════════════════════════════════
+//  NU ACCOUNT — FULL MODULE
+// ═══════════════════════════════════════════════════
+
+let nuViewOpen = false;
+let eNuId = null;
+
+function nuId(){ return S.nextNuId++; }
+
+/** Open / close the Nu overlay */
+function toggleNuView(){
+  nuViewOpen = !nuViewOpen;
+  const el = document.getElementById('nu-view');
+  const btn = document.getElementById('btn-nu-view');
+  el.style.display = nuViewOpen ? 'block' : 'none';
+  if(btn) btn.style.background = nuViewOpen ? 'rgba(130,10,209,0.2)' : 'var(--bg3)';
+  if(nuViewOpen){ populateNuMesFilter(); renderNuDash(); renderNuMovimientos(); renderNuTransfers(); }
+}
+
+/** Compute Nu balance from S.nu array + transfers from gastosVariables cat='Nu' */
+function nuSaldoTotal(){
+  // Direct movements in Nu
+  const directIn  = S.nu.filter(m=>m.tipo==='entrada').reduce((a,b)=>a+b.valor,0);
+  const directOut = S.nu.filter(m=>m.tipo==='gasto').reduce((a,b)=>a+b.valor,0);
+  // Transfers: gastos variables categorized as Nu count as entries into Nu
+  const transfers = S.gastosVariables.filter(g=>g.cat==='Nu').reduce((a,b)=>a+b.valor,0);
+  return { directIn, directOut, transfers, saldo: directIn - directOut + transfers };
+}
+
+function renderNuDash(){
+  const { directIn, directOut, transfers, saldo } = nuSaldoTotal();
+  document.getElementById('nu-saldo-val').textContent = fmtS(saldo);
+  document.getElementById('nu-saldo-sub').textContent =
+    saldo >= 0 ? '✓ Saldo positivo' : '⚠ Saldo en negativo';
+  document.getElementById('nu-total-in').textContent  = fmt(directIn);
+  document.getElementById('nu-total-out').textContent = fmt(directOut);
+  document.getElementById('nu-total-transfers').textContent = fmt(transfers);
+}
+
+function populateNuMesFilter(){
+  const sel = document.getElementById('nu-mes-filter');
+  const curr = sel.value;
+  sel.innerHTML = '<option value="-1">Todos los meses</option>' +
+    MESES.map((m,i)=>`<option value="${i}" ${String(i)===curr?'selected':''}>${m}</option>`).join('');
+}
+
+function renderNuMovimientos(){
+  const filtroMes = parseInt(document.getElementById('nu-mes-filter').value);
+  let items = [...S.nu];
+  if(filtroMes >= 0) items = items.filter(m => m.mes === filtroMes);
+  items.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+
+  const el = document.getElementById('nu-movimientos-list');
+  if(!items.length){
+    el.innerHTML = '<div style="text-align:center;padding:20px 0;color:#7c3aed;font-size:13px;"><i class="ph ph-piggy-bank" style="font-size:32px;display:block;margin-bottom:8px;opacity:.5;"></i>Sin movimientos</div>';
+    return;
+  }
+  el.innerHTML = items.map(m => {
+    const isIn = m.tipo === 'entrada';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(130,10,209,0.12);">
+      <div style="width:34px;height:34px;border-radius:9px;background:${isIn?'rgba(99,102,241,0.15)':'rgba(224,82,82,0.12)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ph-fill ${isIn?'ph-arrow-circle-up':'ph-arrow-circle-down'}" style="font-size:18px;color:${isIn?'#818cf8':'#e05252'};"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.desc||'Movimiento Nu'}</div>
+        <div style="font-size:11px;color:#7c3aed;margin-top:1px;display:flex;align-items:center;gap:3px;">
+          <i class="ph ph-calendar-blank"></i>${m.fecha||MESES[m.mes]||''}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:14px;font-weight:700;color:${isIn?'#c084fc':'#e05252'};">${isIn?'+':'-'}${fmt(m.valor)}</div>
+        <div style="display:flex;gap:3px;justify-content:flex-end;margin-top:4px;">
+          <button onclick="editNuMovimiento(${m.id})" style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(130,10,209,0.25);background:transparent;color:#7c3aed;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="ph ph-pencil-simple" style="font-size:12px;"></i>
+          </button>
+          <button onclick="confirmDeleteNu(${m.id})" style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(224,82,82,0.2);background:transparent;color:#e05252;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="ph ph-trash" style="font-size:12px;"></i>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderNuTransfers(){
+  const transfers = S.gastosVariables.filter(g=>g.cat==='Nu');
+  const el = document.getElementById('nu-transfers-list');
+  if(!transfers.length){
+    el.innerHTML = '<div style="font-size:12px;color:#7c3aed;padding:6px 0;">Ningún gasto categorizado como Nu todavía. Agrega un gasto variable con categoría "Nu" en la app principal.</div>';
+    return;
+  }
+  const total = transfers.reduce((a,b)=>a+b.valor,0);
+  el.innerHTML = `<div style="font-size:11px;color:#a855f7;font-weight:700;margin-bottom:8px;">Total aportado: <span style="color:#c084fc;">${fmt(total)}</span></div>` +
+    transfers.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(g=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid rgba(130,10,209,0.1);">
+      <div style="width:30px;height:30px;border-radius:8px;background:rgba(130,10,209,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ph-fill ph-piggy-bank" style="font-size:15px;color:#820ad1;"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);">${g.desc||'Aporte Nu'}</div>
+        <div style="font-size:10px;color:#7c3aed;">${g.fecha||MESES[g.mes]}</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#a855f7;">+${fmt(g.valor)}</div>
+    </div>`).join('');
+}
+
+/** Open modal for new entry or expense */
+function openNuModal(tipo='entrada'){
+  eNuId = null;
+  document.getElementById('nu-tipo').value = tipo;
+  document.getElementById('nu-mes').innerHTML = MESES.map((m,i)=>`<option value="${i}" ${i===S.mesActivo?'selected':''}>${m}</option>`).join('');
+  document.getElementById('nu-fecha').value = todayStr();
+  document.getElementById('nu-valor').value = '';
+  document.getElementById('nu-desc').value = '';
+  document.getElementById('nu-del-btn').style.display = 'none';
+  updateNuModalType();
+  openModal('nu-modal');
+}
+
+function updateNuModalType(){
+  const tipo = document.getElementById('nu-tipo').value;
+  const title = document.getElementById('nu-modal-title');
+  const btn   = document.getElementById('nu-save-btn');
+  if(tipo === 'entrada'){
+    title.innerHTML = '<i class="ph ph-plus-circle"></i> Nueva entrada Nu';
+    btn.style.background = 'linear-gradient(135deg,#1e3a5f,#1d4ed8)';
+  } else {
+    title.innerHTML = '<i class="ph ph-minus-circle"></i> Nuevo gasto Nu';
+    btn.style.background = 'linear-gradient(135deg,#3b0764,#6b21a8)';
+  }
+}
+
+function editNuMovimiento(id){
+  const m = S.nu.find(x=>x.id===id);
+  if(!m) return;
+  eNuId = id;
+  document.getElementById('nu-tipo').value  = m.tipo;
+  document.getElementById('nu-mes').innerHTML = MESES.map((mes,i)=>`<option value="${i}" ${i===m.mes?'selected':''}>${mes}</option>`).join('');
+  document.getElementById('nu-fecha').value = m.fecha || todayStr();
+  document.getElementById('nu-valor').value = m.valor;
+  document.getElementById('nu-desc').value  = m.desc || '';
+  document.getElementById('nu-del-btn').style.display = 'flex';
+  updateNuModalType();
+  openModal('nu-modal');
+}
+
+function saveNuMovimiento(){
+  const tipo  = document.getElementById('nu-tipo').value;
+  const mes   = parseInt(document.getElementById('nu-mes').value);
+  const fecha = document.getElementById('nu-fecha').value || todayStr();
+  const valor = parseFloat(document.getElementById('nu-valor').value) || 0;
+  const desc  = document.getElementById('nu-desc').value.trim();
+  if(!valor){ toast('Ingresa un valor','ph-warning'); return; }
+  if(eNuId !== null){
+    const m = S.nu.find(x=>x.id===eNuId);
+    Object.assign(m, {tipo, mes, fecha, valor, desc});
+    toast('Movimiento actualizado','ph-check-circle');
+  } else {
+    S.nu.push({ id:nuId(), tipo, mes, fecha, valor, desc });
+    toast(tipo==='entrada'?'Entrada registrada ✓':'Gasto Nu registrado ✓','ph-check-circle');
+  }
+  save();
+  closeModal('nu-modal');
+  renderNuDash();
+  renderNuMovimientos();
+  renderNuTransfers();
+}
+
+function confirmDeleteNu(id){
+  eNuId = id;
+  deleteNuMovimiento();
+}
+function deleteNuMovimiento(){
+  if(!confirm('¿Eliminar este movimiento Nu?')) return;
+  S.nu = S.nu.filter(x=>x.id!==eNuId);
+  save();
+  closeModal('nu-modal');
+  renderNuDash();
+  renderNuMovimientos();
+  renderNuTransfers();
+  toast('Movimiento eliminado','ph-trash');
+}
+
+// ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
 applyTheme(S.theme||'dark');
@@ -2159,3 +2473,4 @@ checkMensualReset();
 </script>
 </body>
 </html>
+
