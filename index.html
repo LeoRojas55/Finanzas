@@ -2009,7 +2009,7 @@ async function exportPNG(m){
 }
 
 // ═══════════════════════════════════════════════════
-//  GOOGLE SHEETS SYNC (v4 — conexión real y verificada)
+//  GOOGLE SHEETS SYNC (v5 — JSONP para evitar CORS)
 // ═══════════════════════════════════════════════════
 const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbypcuEy0riE5XM-1CpPkO8xya__WAaYbMcAbEUv9Gla5cVwgVxCc7nh9IjpQ8aBQ9Q/exec';
 
@@ -2054,66 +2054,143 @@ function showSheetsError(msg){
  * y confiamos en que si no lanza excepción de red, el endpoint existe.
  * Para verificar de verdad usamos una imagen como ping (no tiene CORS).
  */
+/**
+ * Google Sheets desde navegador móvil/desktop.
+ *
+ * IMPORTANTE:
+ * La lectura usa JSONP en lugar de fetch(..., mode:'cors').
+ * Esto evita el bloqueo CORS provocado por la redirección
+ * de Google Apps Script.
+ */
+
+function requestSheetsJSONP(action='getData', timeoutMs=15000){
+  return new Promise((resolve,reject)=>{
+    const callbackName='finanzasSheetsCallback_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    let finished=false;
+
+    const cleanup=()=>{
+      finished=true;
+      clearTimeout(timer);
+      try{delete window[callbackName];}catch(_){}
+      if(script.parentNode)script.parentNode.removeChild(script);
+    };
+
+    const timer=setTimeout(()=>{
+      if(finished)return;
+      cleanup();
+      reject(new Error('Tiempo de espera agotado al conectar con Google Sheets'));
+    },timeoutMs);
+
+    window[callbackName]=(json)=>{
+      if(finished)return;
+      cleanup();
+
+      if(!json){
+        reject(new Error('Apps Script no devolvió una respuesta'));
+        return;
+      }
+
+      if(json.status!=='ok'){
+        reject(new Error(json.message||'Error en Google Apps Script'));
+        return;
+      }
+
+      resolve(json);
+    };
+
+    script.id=callbackName;
+    script.async=true;
+    script.src=
+      S.sheets.url+
+      (S.sheets.url.includes('?')?'&':'?')+
+      'action='+encodeURIComponent(action)+
+      '&callback='+encodeURIComponent(callbackName)+
+      '&_='+Date.now();
+
+    script.onerror=()=>{
+      if(finished)return;
+      cleanup();
+      reject(new Error('No se pudo cargar Google Apps Script. Verifica la URL y la implementación /exec.'));
+    };
+
+    document.body.appendChild(script);
+  });
+}
+
 async function connectSheets(){
   const urlInput=document.getElementById('sheets-url').value.trim();
   const id=document.getElementById('sheets-id').value.trim();
   const url=urlInput||DEFAULT_SHEETS_URL;
 
-  if(!url.startsWith('https://script.google.com')){
-    setSyncBadge('error','URL inválida');
-    showSheetsError('La URL debe empezar con https://script.google.com');
-    toast('URL inválida — debe ser de Apps Script','ph-warning');
+  if(!url){
+    setSyncBadge('error','Falta URL');
+    showSheetsError('Debes ingresar la URL de Apps Script');
+    toast('Falta la URL de Apps Script','ph-warning');
     return;
   }
 
-  setSyncBadge('syncing','Conectando...');
-  toast('Conectando con Sheets...','ph-arrows-clockwise');
+  if(!url.startsWith('https://script.google.com/macros/s/') || !url.endsWith('/exec')){
+    setSyncBadge('error','URL inválida');
+    showSheetsError('La URL debe ser la URL de implementación de Apps Script y terminar en /exec');
+    toast('URL de Apps Script inválida','ph-warning');
+    return;
+  }
 
-  // Guardamos la URL independientemente para que Subir/Importar funcionen
-  S.sheets={url,id,connected:false,lastError:''};
+  setSyncBadge('syncing','Verificando...');
+  toast('Verificando conexión con Sheets...','ph-arrows-clockwise');
+
+  // Guardamos la configuración, pero todavía NO la marcamos como conectada.
+  S.sheets={
+    url,
+    id,
+    connected:false,
+    lastError:''
+  };
   save();
 
   try{
-    // POST con no-cors: no podemos leer la respuesta, pero si no lanza
-    // excepción de red significa que el servidor existe y aceptó la petición.
-    // Es la única forma que funciona en iOS Safari sin un proxy propio.
-    await fetch(url,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({ping:true,...buildSheetsPayload()})
-    });
+    // La respuesta real de Apps Script se lee mediante JSONP.
+    await requestSheetsJSONP('getData');
 
-    // Si llegamos aquí sin excepción, la URL es alcanzable
     S.sheets.connected=true;
     S.sheets.lastError='';
-    save();updateSettingsProfile();
+    save();
+    updateSettingsProfile();
+
     setSyncBadge('ok','Conectado ✓');
-    toast('Conectado ✓ — datos subidos a Sheets','ph-check-circle');
+    toast('Google Sheets conectado ✓','ph-check-circle');
+
+    renderPage(S.currentPage);
 
   }catch(err){
-    // Error de red real (sin internet, URL incorrecta, etc.)
     S.sheets.connected=false;
     S.sheets.lastError=err.message;
-    save();updateSettingsProfile();
+    save();
+    updateSettingsProfile();
+
     showSheetsError(err.message);
     setSyncBadge('error','Sin conexión');
-    toast('Error de red: '+err.message,'ph-warning');
+    toast('Error de conexión: '+err.message,'ph-warning');
+    console.error('[Sheets] connectSheets:',err);
   }
 }
 
 /**
- * syncToSheets — sube todos los datos a la hoja.
- * Usa no-cors para compatibilidad con iOS Safari.
- * Con no-cors no podemos leer la respuesta, pero Apps Script
- * igual recibe y procesa el POST correctamente.
+ * syncToSheets — mantiene POST no-cors para escribir.
+ * El navegador no necesita leer la respuesta del POST.
  */
 async function syncToSheets(silent=false){
   if(!S.sheets.url){
     if(!silent)toast('Configura Google Sheets primero','ph-warning');
     return;
   }
-  if(!silent){toast('Subiendo datos...','ph-arrows-clockwise');setSyncBadge('syncing');}
+
+  if(!silent){
+    toast('Subiendo datos...','ph-arrows-clockwise');
+    setSyncBadge('syncing','Subiendo...');
+  }
+
   try{
     await fetch(S.sheets.url,{
       method:'POST',
@@ -2121,74 +2198,129 @@ async function syncToSheets(silent=false){
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(buildSheetsPayload())
     });
+
     S.sheets.connected=true;
     S.sheets.lastSync=new Date().toISOString();
     S.sheets.lastError='';
     save();
-    if(!silent){toast('Datos subidos a Sheets ✓','ph-check-circle');setSyncBadge('ok','Sincronizado ✓');}
+
+    if(!silent){
+      toast('Datos subidos a Sheets ✓','ph-check-circle');
+      setSyncBadge('ok','Sincronizado ✓');
+    }
+
   }catch(err){
-    S.sheets.lastError=err.message;save();
-    if(!silent){toast('Error de red al subir: '+err.message,'ph-warning');setSyncBadge('error','Error de red');}
+    S.sheets.lastError=err.message;
+    S.sheets.connected=false;
+    save();
+
+    if(!silent){
+      toast('Error de red al subir: '+err.message,'ph-warning');
+      setSyncBadge('error','Error de red');
+    }
+
+    console.error('[Sheets] syncToSheets:',err);
   }
 }
 
 /**
- * pullFromSheets — importa datos desde la hoja hacia la app.
+ * pullFromSheets — IMPORTA desde Google Sheets sin fetch CORS.
  *
- * IMPORTANTE: para que pullFromSheets funcione en móvil, el Apps Script
- * debe tener acceso "Cualquier usuario (anónimo)" y responder con los
- * headers CORS correctos. Si falla en móvil, la alternativa es exportar
- * los datos como JSON desde el script y pegarlos manualmente.
+ * Se usa JSONP:
+ *   <script src=".../exec?action=getData&callback=...">
  *
- * Intentamos primero con credentials:'omit' para evitar el redirect de auth.
+ * Requiere que Code.gs responda JSONP cuando recibe "callback".
  */
 async function pullFromSheets(){
-  if(!S.sheets.url){toast('Configura Google Sheets primero','ph-warning');return;}
+  if(!S.sheets.url){
+    toast('Configura Google Sheets primero','ph-warning');
+    return;
+  }
+
   toast('Importando desde Sheets...','ph-arrows-clockwise');
+  setSyncBadge('syncing','Importando...');
+
   try{
-    const res=await fetch(S.sheets.url+'?action=getData',{
-      method:'GET',
-      mode:'cors',
-      credentials:'omit'
-    });
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const json=await res.json();
-    if(json.status!=='ok')throw new Error(json.message||'Error en el script');
+    const json=await requestSheetsJSONP('getData');
     const d=json.data||{};
     let imported=0;
+
     if(d.ingresos&&d.ingresos.length){
-      S.ingresos=d.ingresos.map(i=>({id:nid(),mes:Math.max(0,MESES.indexOf(i.mes)),fecha:i.fecha||'',valor:Number(i.valor)||0,desc:i.desc||''}));
+      S.ingresos=d.ingresos.map(i=>({
+        id:nid(),
+        mes:Math.max(0,MESES.indexOf(i.mes)),
+        fecha:i.fecha||'',
+        valor:Number(i.valor)||0,
+        desc:i.desc||''
+      }));
       imported++;
     }
+
     if(d.gastosFijos&&d.gastosFijos.length){
-      S.gastosFijos=d.gastosFijos.map(f=>({id:nid(),item:f.item,ubi:f.ubi,valor:Number(f.valor)||0,diaLimite:null,fechaLimite:f.fechaLimite||''}));
+      S.gastosFijos=d.gastosFijos.map(f=>{
+        const raw=String(f.fechaLimite||'');
+        const match=raw.match(/(\d{1,2})/);
+        return{
+          id:nid(),
+          item:f.item,
+          ubi:f.ubi,
+          valor:Number(f.valor)||0,
+          diaLimite:match?parseInt(match[1],10):null,
+          fechaLimite:raw
+        };
+      });
       imported++;
     }
+
     if(d.gastosVariables&&d.gastosVariables.length){
-      S.gastosVariables=d.gastosVariables.map(g=>({id:nid(),mes:Math.max(0,MESES.indexOf(g.mes)),fecha:g.fecha||'',cat:g.cat,valor:Number(g.valor)||0,desc:g.desc||''}));
+      S.gastosVariables=d.gastosVariables.map(g=>({
+        id:nid(),
+        mes:Math.max(0,MESES.indexOf(g.mes)),
+        fecha:g.fecha||'',
+        cat:g.cat,
+        valor:Number(g.valor)||0,
+        desc:g.desc||''
+      }));
       imported++;
     }
+
     if(d.nu&&d.nu.length){
-      S.nu=d.nu.map(m=>({id:nuId(),tipo:m.tipo,mes:Math.max(0,MESES.indexOf(m.mes)),fecha:m.fecha||'',valor:Number(m.valor)||0,desc:m.desc||''}));
+      S.nu=d.nu.map(m=>({
+        id:nuId(),
+        tipo:m.tipo,
+        mes:Math.max(0,MESES.indexOf(m.mes)),
+        fecha:m.fecha||'',
+        valor:Number(m.valor)||0,
+        desc:m.desc||''
+      }));
       imported++;
     }
-    if(imported===0)throw new Error('La hoja está vacía — sube los datos primero desde el computador');
-    S.sheets.connected=true;save();
+
+    if(imported===0){
+      throw new Error('La hoja está vacía — sube los datos primero desde la app');
+    }
+
+    S.sheets.connected=true;
+    S.sheets.lastError='';
+    S.sheets.lastSync=new Date().toISOString();
+
+    save();
+    updateSettingsProfile();
     renderPage(S.currentPage);
+
     toast('Datos importados desde Sheets ✓','ph-check-circle');
     setSyncBadge('ok','Conectado ✓');
+
   }catch(err){
-    // Si falla CORS en móvil, mostramos instrucción clara
-    const esCORS=err.message.includes('Failed to fetch')||err.message.includes('NetworkError')||err.message.includes('CORS');
-    if(esCORS){
-      toast('Error CORS en móvil — lee las instrucciones abajo','ph-warning');
-      showSheetsError('Error CORS — ver instrucciones');
-      // Mostrar modal con instrucción de copia manual
-      alert('Para importar en móvil:\n\n1. Abre tu hoja de Google Sheets en el computador\n2. En el script (Apps Script) corre la función exportJSON()\n3. Copia el JSON que aparece\n4. Usa la opción "Importar JSON" en la app\n\nO simplemente sube los datos desde el computador y no uses "Importar" en el celular.');
-    }else{
-      toast('Error al importar: '+err.message,'ph-warning');
-      showSheetsError(err.message);
-    }
+    S.sheets.lastError=err.message;
+    S.sheets.connected=false;
+    save();
+    updateSettingsProfile();
+
+    showSheetsError(err.message);
+    setSyncBadge('error','Error al importar');
+    toast('Error al importar: '+err.message,'ph-warning');
+    console.error('[Sheets] pullFromSheets:',err);
   }
 }
 
