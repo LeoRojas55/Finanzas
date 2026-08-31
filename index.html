@@ -375,7 +375,7 @@ select.form-input option{background:var(--bg3);}
 
 /* FIREBASE AUTH */
 .auth-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}.auth-screen.hidden{display:none}.auth-card{width:min(420px,100%);background:var(--card-bg);border:1px solid var(--border2);border-radius:20px;padding:24px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}.auth-brand-icon{width:48px;height:48px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,var(--brand-dark),var(--brand))}.auth-brand-icon img{width:100%;height:100%;object-fit:cover}.auth-brand h2{font-size:22px}.auth-brand h2 span{color:var(--brand-light)}.auth-subtitle{font-size:12px;color:var(--text3);margin-top:2px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:18px}.auth-tab{padding:9px;border:0;border-radius:8px;background:transparent;color:var(--text3);font:700 12px Inter,sans-serif;cursor:pointer}.auth-tab.active{background:var(--brand);color:#fff}.google-auth-btn{width:100%;height:42px;border:1px solid var(--border2);border-radius:10px;background:var(--card-bg);color:var(--text);font:700 12px Inter,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:.2s}.google-auth-btn:hover{border-color:var(--brand);transform:translateY(-1px)}.google-auth-btn i{font-size:18px}.google-auth-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}.legacy-import-note{background:var(--teal-dim);border:1px solid rgba(6,182,212,.22);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--text2);margin-top:12px}.legacy-import-note strong{color:var(--brand-light)}
-.auth-error{display:none;background:var(--orange-dim);border:1px solid rgba(224,82,82,.25);color:var(--accent-light);padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5;margin-bottom:12px}.auth-help{text-align:center;font-size:11px;color:var(--text3);margin-top:12px}.auth-link{border:0;background:none;color:var(--brand);font:600 11px Inter,sans-serif;cursor:pointer}.auth-loading{position:fixed;inset:0;z-index:1100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}.auth-loading.hidden{display:none}.auth-spinner{font-size:32px;color:var(--brand);animation:spin 1s linear infinite}.firebase-user-badge{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);margin:8px 0 12px}.firebase-user-badge i{color:var(--brand)}
+.auth-error{display:none;background:var(--orange-dim);border:1px solid rgba(224,82,82,.25);color:var(--accent-light);padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5;margin-bottom:12px}.auth-help{text-align:center;font-size:11px;color:var(--text3);margin-top:12px}.auth-link{border:0;background:none;color:var(--brand);font:600 11px Inter,sans-serif;cursor:pointer}.auth-loading{position:fixed;inset:0;z-index:1100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}.auth-loading.hidden{display:none}.auth-spinner{font-size:32px;color:var(--brand);animation:spin 1s linear infinite}.firebase-user-badge{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);margin:8px 0 12px}.firebase-user-badge i{color:var(--brand)}.drive-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}.drive-item:last-child{border-bottom:none}.drive-item:hover{background:var(--teal-dim)}.drive-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--teal-dim2);color:var(--brand)}.drive-item.folder .drive-icon{background:rgba(245,158,11,.13);color:#f59e0b}.drive-item.file .drive-icon{background:rgba(59,130,246,.13);color:#60a5fa}.drive-body{flex:1;min-width:0}.drive-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.drive-sub{font-size:10px;color:var(--text3);margin-top:2px}.drive-actions{display:flex;gap:4px}.drive-breadcrumbs{display:flex;align-items:center;gap:5px;overflow-x:auto;white-space:nowrap;padding:6px 0 10px;font-size:11px;color:var(--text3)}.drive-breadcrumbs button{border:0;background:none;color:var(--brand);font:600 11px Inter,sans-serif;cursor:pointer;padding:2px}.drive-empty{text-align:center;padding:24px 10px;color:var(--text3);font-size:12px}.drive-note{font-size:11px;color:var(--text3);line-height:1.6}.movement-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:4px}.movement-retiro{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.22)}.movement-fijo{background:var(--teal-dim);color:var(--brand);border:1px solid var(--border2)}
 </style>
 </head>
 <body>
@@ -635,7 +635,12 @@ select.form-input option{background:var(--bg3);}
         </select>
       </div>
     </div>
-    <div class="form-section"><label class="form-label"><i class="ph ph-calendar-check"></i>Fecha del gasto</label><input class="form-input" type="date" id="var-fecha"></div>
+    <div class="form-row" style="margin-bottom:13px;">
+      <div class="form-section" style="margin:0"><label class="form-label"><i class="ph ph-arrows-left-right"></i>Tipo de movimiento</label><select class="form-input" id="var-tipo-mov" onchange="updateVariableMovementUI()"><option value="gasto">Gasto real</option><option value="retiro">Retiro</option></select></div>
+      <div class="form-section" style="margin:0" id="var-destino-wrap"><label class="form-label"><i class="ph ph-house"></i>Destino del retiro</label><select class="form-input" id="var-destino" onchange="updateVariableMovementUI()"><option value="libre">Uso libre / efectivo</option><option value="fijo">Gasto fijo</option></select></div>
+    </div>
+    <div class="form-section" id="var-fijo-wrap" style="display:none"><label class="form-label"><i class="ph ph-link"></i>Asociar a gasto fijo</label><select class="form-input" id="var-fijo"></select><div style="font-size:10px;color:var(--text3);margin-top:4px;">Si lo asocias a un gasto fijo, el retiro se registra como movimiento y <strong>no vuelve a sumarse como gasto variable</strong>. El gasto fijo puede quedar marcado como pagado.</div></div>
+    <div class="form-section"><label class="form-label"><i class="ph ph-calendar-check"></i>Fecha del gasto / retiro</label><input class="form-input" type="date" id="var-fecha"></div>
     <div class="form-section"><label class="form-label"><i class="ph ph-currency-circle-dollar"></i>Valor</label><input class="form-input" type="number" id="var-valor" placeholder="0"></div>
     <div class="form-section"><label class="form-label"><i class="ph ph-pencil-line"></i>Descripción</label><input class="form-input" type="text" id="var-desc" placeholder="Detalle del gasto"></div>
     <button class="btn-primary" onclick="saveVariable()"><i class="ph ph-floppy-disk"></i>Guardar gasto</button>
@@ -737,6 +742,11 @@ select.form-input option{background:var(--bg3);}
     <div class="settings-item" onclick="openSubPage('sheets-page')">
       <div class="si-icon" style="background:rgba(29,111,66,0.15);"><i class="ph-fill ph-google-sheets-logo" style="color:#1d6f42;"></i></div>
       <div class="si-body"><div class="si-title">Google Sheets</div><div class="si-sub" id="sheets-status-text">Conecta tu hoja de cálculo</div></div>
+      <div class="si-arrow"><i class="ph ph-caret-right"></i></div>
+    </div>
+    <div class="settings-item" onclick="openSubPage('drive-page')">
+      <div class="si-icon" style="background:rgba(66,133,244,0.12);"><i class="ph-fill ph-google-drive-logo" style="color:#4285f4;"></i></div>
+      <div class="si-body"><div class="si-title">Comprobantes de pago</div><div class="si-sub" id="drive-status-text">Abrir carpetas de Google Drive</div></div>
       <div class="si-arrow"><i class="ph ph-caret-right"></i></div>
     </div>
 
@@ -897,6 +907,21 @@ select.form-input option{background:var(--bg3);}
         <p>4. Pega la URL que termina en <code>/exec</code> arriba</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════ GOOGLE DRIVE SUB-PAGE ═══════════ -->
+<div class="sub-page" id="drive-page">
+  <div class="sub-topbar"><button class="btn-back" onclick="closeSubPage('drive-page')"><i class="ph ph-arrow-left"></i></button><h2>Comprobantes de pago</h2></div>
+  <div class="sub-body">
+    <div style="text-align:center;padding:14px 0 8px;"><i class="ph-fill ph-google-drive-logo" style="font-size:50px;color:#4285f4;display:block;margin-bottom:8px;"></i><p style="font-size:15px;font-weight:700;margin-bottom:4px;">Carpetas de comprobantes</p><p style="font-size:12px;color:var(--text3);">Consulta tus carpetas y abre los comprobantes directamente desde Drive.</p></div>
+    <div class="card" style="margin-bottom:10px;"><div class="card-header"><span class="card-title"><i class="ph ph-lock-key"></i>Acceso seguro</span></div><div class="drive-note">Para ver carpetas privadas, Finanzas solicita a Google permiso de <strong>solo lectura</strong> sobre Drive. El permiso se solicita cuando pulsas el botón y el token de acceso no se guarda en Firestore.</div><button class="btn-primary" style="margin-top:10px;background:linear-gradient(135deg,#2f65d5,#4285f4);" onclick="connectGoogleDrive()"><i class="ph ph-google-logo"></i><span id="drive-connect-label">Conectar Google Drive</span></button></div>
+    <div class="card" style="margin-bottom:10px;"><div class="card-header"><span class="card-title"><i class="ph ph-folder-open"></i>Carpeta principal</span><button class="btn-icon" onclick="openDriveRoot()" title="Volver a raíz"><i class="ph ph-house"></i></button></div>
+      <div class="form-section"><label class="form-label"><i class="ph ph-folder-simple"></i>ID de carpeta</label><input class="form-input" id="drive-root-id" type="text" value="1cbVPEYkp2aBVZgVA_dFGhhqpAvUxgNT3" placeholder="ID de la carpeta de Google Drive"></div>
+      <div class="form-row"><button class="btn-primary" onclick="saveDriveRoot()"><i class="ph ph-floppy-disk"></i>Guardar carpeta</button><button class="btn-primary" style="background:var(--bg3);color:var(--text);border:1px solid var(--border2);" onclick="openDriveRoot()"><i class="ph ph-arrow-clockwise"></i>Ver contenido</button></div>
+      <a id="drive-open-link" href="https://drive.google.com/drive/folders/1cbVPEYkp2aBVZgVA_dFGhhqpAvUxgNT3" target="_blank" rel="noopener" class="settings-item" style="margin-top:10px;"><div class="si-icon" style="background:rgba(66,133,244,0.12);"><i class="ph ph-arrow-square-out" style="color:#4285f4;"></i></div><div class="si-body"><div class="si-title">Abrir en Google Drive</div><div class="si-sub">Se abre la carpeta original en Drive</div></div><div class="si-arrow"><i class="ph ph-caret-right"></i></div></a>
+    </div>
+    <div class="card"><div id="drive-breadcrumbs" class="drive-breadcrumbs"></div><div id="drive-list"><div class="drive-empty"><i class="ph ph-folder-open" style="font-size:32px;display:block;margin-bottom:8px;"></i>Conecta Google Drive para consultar tus carpetas.</div></div></div>
   </div>
 </div>
 
@@ -1096,6 +1121,7 @@ const DEF_STATE={
   theme:'dark',
   profile:{nombre:'',email:'',tel:'',ciudad:'Tunja',moneda:'COP'},
   sheets:{url:'https://script.google.com/macros/s/AKfycbypcuEy0riE5XM-1CpPkO8xya__WAaYbMcAbEUv9Gla5cVwgVxCc7nh9IjpQ8aBQ9Q/exec',id:'',connected:false},
+  drive:{rootFolderId:'1cbVPEYkp2aBVZgVA_dFGhhqpAvUxgNT3',rootFolderName:'SERVICIOS',connected:false},
   nu:[],  // {id, tipo:'entrada'|'gasto', mes, fecha, valor, desc}
   nextNuId:200,
   ingresos:[
@@ -1139,8 +1165,14 @@ function fmt(n){
 function fmtS(n){return(n<0?'-':'')+fmt(n);}
 function ingM(m){return S.ingresos.filter(i=>i.mes===m).reduce((a,b)=>a+b.valor,0);}
 function fijM(m){return S.gastosFijos.reduce((a,f)=>{const p=S.pagos[m+'_'+f.id];return a+(p==='no aplica'?0:f.valor);},0);}
-function varM(m){return S.gastosVariables.filter(g=>g.mes===m).reduce((a,b)=>a+b.valor,0);}
+function isRetiro(g){return g && (g.movimientoTipo==='retiro'||g.tipoMovimiento==='retiro'||g.esRetiro===true);}
+function isRetiroAsociadoFijo(g){return isRetiro(g) && (g.destinoTipo==='fijo' || g.destinoFijoId!=null);}
+function varExpenseItems(m){return S.gastosVariables.filter(g=>g.mes===m&&!isRetiro(g));}
+function retiroItems(m){return S.gastosVariables.filter(g=>g.mes===m&&isRetiro(g));}
+function varM(m){return varExpenseItems(m).reduce((a,b)=>a+b.valor,0);}
+function retiroM(m){return retiroItems(m).reduce((a,b)=>a+b.valor,0);}
 function gasM(m){return fijM(m)+varM(m);}
+function getFijoById(id){return S.gastosFijos.find(f=>String(f.id)===String(id));}
 function gPago(m,id){return S.pagos[m+'_'+id]||'pendiente';}
 
 // ═══════════════════════════════════════════════════
@@ -1248,8 +1280,8 @@ function calSelectDay(d,m,y){
   if(!gastos.length){
     list.innerHTML='<div class="empty-state" style="padding:16px 0;"><i class="ph ph-receipt" style="font-size:28px;"></i><p>Sin gastos este día</p></div>';
   } else {
-    const total=gastos.reduce((a,b)=>a+b.valor,0);
-    list.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:700;">Total: <span class="c-accent">${fmt(total)}</span></div>`+
+    const total=gastos.filter(g=>!isRetiro(g)).reduce((a,b)=>a+b.valor,0);const totalR=gastos.filter(g=>isRetiro(g)).reduce((a,b)=>a+b.valor,0);
+    list.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:700;">Gastos reales: <span class="c-accent">${fmt(total)}</span>${totalR?` · Retiros: <span style="color:#f59e0b;">${fmt(totalR)}</span>`:''}</div>`+
     gastos.map(g=>{
       const ci=CATS.indexOf(g.cat),col=CAT_COLORS[ci]||'#888',icon=CAT_ICONS[ci]||'ph-tag';
       return`<div class="list-item">
@@ -1335,6 +1367,7 @@ function openSettings(){
 }
 function closeSettings(){document.getElementById('settings-page').classList.remove('open');}
 function openSubPage(id){
+  if(id==='drive-page'){const inp=document.getElementById('drive-root-id');if(inp)inp.value=S.drive?.rootFolderId||'1cbVPEYkp2aBVZgVA_dFGhhqpAvUxgNT3';updateDriveUI();}
   if(id==='sheets-page'){
     const urlInp=document.getElementById('sheets-url');
     const idInp=document.getElementById('sheets-id');
@@ -1350,6 +1383,7 @@ function updateSettingsProfile(){
   document.getElementById('settings-name-display').textContent=p.nombre||'Mi perfil';
   document.getElementById('settings-email-display').textContent=p.email||'Configura tus datos personales';
   document.getElementById('sheets-status-text').textContent=S.sheets.connected?'Conectado ✓':'Conecta tu hoja de cálculo';
+  const driveText=document.getElementById('drive-status-text');if(driveText)driveText.textContent=S.drive?.connected?'Google Drive conectado ✓':'Abrir carpetas de Google Drive';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1417,7 +1451,7 @@ function renderDash(){
     <div class="metric m-amber">
       <div class="mlabel"><i class="ph-fill ph-house"></i>Fijos</div>
       <div class="mval" style="color:var(--text2)">${fmt(fijM(m))}</div>
-      <div class="msub">Variables: ${fmt(varM(m))}</div>
+      <div class="msub">Variables: ${fmt(varM(m))}${retiroM(m)?` · Retiros: ${fmt(retiroM(m))}`:''}</div>
     </div>`;
   renderChartMain();renderChartCat(m);renderPendientes(m);
   renderSyncBar();
@@ -1445,7 +1479,7 @@ function renderChartMain(){
 
 function renderChartCat(m){
   if(charts.cat)charts.cat.destroy();
-  const filtered=CATS.map((c,i)=>({c,v:S.gastosVariables.filter(g=>g.mes===m&&g.cat===c).reduce((a,b)=>a+b.valor,0),col:CAT_COLORS[i]})).filter(x=>x.v>0);
+  const filtered=CATS.map((c,i)=>({c,v:S.gastosVariables.filter(g=>g.mes===m&&!isRetiro(g)&&g.cat===c).reduce((a,b)=>a+b.valor,0),col:CAT_COLORS[i]})).filter(x=>x.v>0);
   const ctx=document.getElementById('chart-cat');
   if(!filtered.length){ctx.parentElement.innerHTML='<p style="font-size:12px;color:var(--text3);padding:8px 0;">Sin gastos variables</p>';document.getElementById('cat-legend').innerHTML='';return;}
   const total=filtered.reduce((a,b)=>a+b.v,0);
@@ -1556,34 +1590,17 @@ function setPago(m,id,v){S.pagos[m+'_'+id]=v;save();toast(v==='pagado'?'Marcado 
 //  GASTOS VARIABLES
 // ═══════════════════════════════════════════════════
 function renderVar(){
-  const m=S.mesActivo,items=S.gastosVariables.filter(g=>g.mes===m),total=items.reduce((a,b)=>a+b.valor,0);
-  document.getElementById('var-summary').innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Total variables · ${MESES[m]}</div>
-      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;" class="c-accent">${fmt(total)}</div></div>
-      <div style="font-size:11px;color:var(--text3);">${items.length} registro${items.length!==1?'s':''}</div>
-    </div>`;
-  const el=document.getElementById('var-lista');
-  if(!items.length){el.innerHTML='<div class="empty-state"><i class="ph ph-shopping-cart"></i><p>Sin gastos variables en este mes</p></div>';return;}
-  const byCat={};items.forEach(g=>{if(!byCat[g.cat])byCat[g.cat]=[];byCat[g.cat].push(g);});
-  el.innerHTML=Object.entries(byCat).map(([cat,gs])=>{
-    const ci=CATS.indexOf(cat),col=CAT_COLORS[ci]||'#888',icon=CAT_ICONS[ci]||'ph-tag';
-    const sub=gs.reduce((a,b)=>a+b.valor,0);
-    return`<div class="section-label"><i class="ph ${icon}"></i>${cat}<span class="slamt">${fmt(sub)}</span></div>
-    ${gs.map(g=>`
-      <div class="list-item">
-        <div class="item-icon" style="background:${col}1a;"><i class="ph-fill ${icon}" style="font-size:18px;color:${col};"></i></div>
-        <div class="item-body"><div class="item-name">${g.desc||g.cat}</div><div class="item-sub"><i class="ph ph-calendar-blank"></i>${MESES[g.mes]}</div></div>
-        <div class="item-right">
-          <div class="item-amount c-accent">${fmt(g.valor)}</div>
-          <div class="item-actions">
-            <button class="btn-icon edit" onclick="editVariable(${g.id})" aria-label="Editar"><i class="ph ph-pencil-simple"></i></button>
-            <button class="btn-icon danger" onclick="confirmDelVar(${g.id})" aria-label="Eliminar"><i class="ph ph-trash"></i></button>
-          </div>
-        </div>
-      </div>`).join('')}`;}).join('');
+  const m=S.mesActivo,items=S.gastosVariables.filter(g=>g.mes===m),gastos=items.filter(g=>!isRetiro(g)),retiros=items.filter(g=>isRetiro(g));
+  const total=gastos.reduce((a,b)=>a+b.valor,0),totalRetiros=retiros.reduce((a,b)=>a+b.valor,0);
+  document.getElementById('var-summary').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Gastos variables · ${MESES[m]}</div><div style="font-size:24px;font-weight:700;letter-spacing:-.5px;" class="c-accent">${fmt(total)}</div></div><div style="font-size:11px;color:var(--text3);text-align:right;">${gastos.length} gasto${gastos.length!==1?'s':''}<br>${retiros.length?`<span style="color:#f59e0b;">${retiros.length} retiro${retiros.length!==1?'s':''} · ${fmt(totalRetiros)}</span>`:''}</div></div>`;
+  const el=document.getElementById('var-lista');if(!items.length){el.innerHTML='<div class="empty-state"><i class="ph ph-shopping-cart"></i><p>Sin movimientos en este mes</p></div>';return;}
+  const groups={};items.forEach(g=>{const key=isRetiro(g)?'__RETIROS__':g.cat;if(!groups[key])groups[key]=[];groups[key].push(g);});
+  el.innerHTML=Object.entries(groups).map(([cat,gs])=>{
+    if(cat==='__RETIROS__'){const sub=gs.reduce((a,b)=>a+b.valor,0);return `<div class="section-label"><i class="ph ph-bank"></i>Retiros / movimientos de efectivo<span class="slamt">${fmt(sub)}</span></div>${gs.map(g=>{const fijo=getFijoById(g.destinoFijoId);const destino=fijo?`Destinado a ${fijo.item} · ${fijo.ubi}`:'Uso libre / efectivo';return `<div class="list-item"><div class="item-icon" style="background:rgba(245,158,11,.12);"><i class="ph-fill ph-bank" style="font-size:18px;color:#f59e0b;"></i></div><div class="item-body"><div class="item-name">${g.desc||'Retiro'} <span class="movement-badge movement-retiro">RETIRO</span>${fijo?'<span class="movement-badge movement-fijo">ASOCIADO</span>':''}</div><div class="item-sub"><i class="ph ph-calendar-blank"></i>${g.fecha||MESES[g.mes]} · ${destino}</div></div><div class="item-right"><div class="item-amount" style="color:#f59e0b;">${fmt(g.valor)}</div><div class="item-actions"><button class="btn-icon edit" onclick="editVariable(${g.id})" aria-label="Editar"><i class="ph ph-pencil-simple"></i></button><button class="btn-icon danger" onclick="confirmDelVar(${g.id})" aria-label="Eliminar"><i class="ph ph-trash"></i></button></div></div></div>`}).join('')}`;}
+    const ci=CATS.indexOf(cat),col=CAT_COLORS[ci]||'#888',icon=CAT_ICONS[ci]||'ph-tag',sub=gs.reduce((a,b)=>a+b.valor,0);
+    return `<div class="section-label"><i class="ph ${icon}"></i>${cat}<span class="slamt">${fmt(sub)}</span></div>${gs.map(g=>`<div class="list-item"><div class="item-icon" style="background:${col}1a;"><i class="ph-fill ${icon}" style="font-size:18px;color:${col};"></i></div><div class="item-body"><div class="item-name">${g.desc||g.cat}</div><div class="item-sub"><i class="ph ph-calendar-blank"></i>${MESES[g.mes]}${g.fecha?` · ${g.fecha.substring(8,10)}/${g.fecha.substring(5,7)}`:''}</div></div><div class="item-right"><div class="item-amount c-accent">${fmt(g.valor)}</div><div class="item-actions"><button class="btn-icon edit" onclick="editVariable(${g.id})" aria-label="Editar"><i class="ph ph-pencil-simple"></i></button><button class="btn-icon danger" onclick="confirmDelVar(${g.id})" aria-label="Eliminar"><i class="ph ph-trash"></i></button></div></div></div>`).join('')}`;
+  }).join('');
 }
-
 // ═══════════════════════════════════════════════════
 //  RESUMEN ANUAL
 // ═══════════════════════════════════════════════════
@@ -1637,7 +1654,7 @@ function renderResMes(){
 
   // Donut chart — gastos variables por categoría
   if(charts.mesDonut)charts.mesDonut.destroy();
-  const filtered=CATS.map((c,i)=>({c,v:S.gastosVariables.filter(g=>g.mes===m&&g.cat===c).reduce((a,b)=>a+b.valor,0),col:CAT_COLORS[i]})).filter(x=>x.v>0);
+  const filtered=CATS.map((c,i)=>({c,v:S.gastosVariables.filter(g=>g.mes===m&&!isRetiro(g)&&g.cat===c).reduce((a,b)=>a+b.valor,0),col:CAT_COLORS[i]})).filter(x=>x.v>0);
   if(filtered.length){
     charts.mesDonut=new Chart(document.getElementById('chart-mes-donut'),{
       type:'doughnut',
@@ -1662,13 +1679,15 @@ function renderResMes(){
   });
 
   // Lista detalle variables
-  const vars=S.gastosVariables.filter(g=>g.mes===m).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const vars=S.gastosVariables.filter(g=>g.mes===m&&!isRetiro(g)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const retiros=S.gastosVariables.filter(g=>g.mes===m&&isRetiro(g)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
   const pend=S.gastosFijos.filter(f=>gPago(m,f.id)==='pendiente'&&f.valor>0);
   let listaHTML='';
   if(pend.length){
     listaHTML+=`<div class="section-label" style="color:var(--accent);"><i class="ph ph-warning-circle"></i>Pendientes de pago (${pend.length})</div>`;
     listaHTML+=pend.map(f=>`<div class="list-item"><div class="item-icon" style="background:rgba(224,82,82,0.12);"><i class="ph-fill ph-house" style="font-size:18px;color:var(--accent);"></i></div><div class="item-body"><div class="item-name">${f.item}</div><div class="item-sub">${f.ubi}${f.diaLimite?' · día '+f.diaLimite:''}</div></div><div class="item-right"><div class="item-amount" style="color:var(--accent);">${fmt(f.valor)}</div></div></div>`).join('');
   }
+  if(retiros.length){listaHTML+=`<div class="section-label" style="color:#f59e0b;"><i class="ph ph-bank"></i>Retiros (${retiros.length})</div>`;listaHTML+=retiros.map(g=>{const fijo=getFijoById(g.destinoFijoId);return `<div class="list-item"><div class="item-icon" style="background:rgba(245,158,11,.12);"><i class="ph-fill ph-bank" style="font-size:18px;color:#f59e0b;"></i></div><div class="item-body"><div class="item-name">${g.desc||'Retiro'} <span class="movement-badge movement-retiro">NO SUMA COMO GASTO</span></div><div class="item-sub">${g.fecha||MESES[g.mes]} · ${fijo?'→ '+fijo.item:'Uso libre'}</div></div><div class="item-right"><div class="item-amount" style="color:#f59e0b;">${fmt(g.valor)}</div></div></div>`;}).join('');}
   if(vars.length){
     listaHTML+=`<div class="section-label"><i class="ph ph-receipt"></i>Gastos variables (${vars.length})</div>`;
     listaHTML+=vars.map(g=>{
@@ -1739,23 +1758,13 @@ function deleteIngreso(){if(!confirm('¿Eliminar este ingreso?'))return;S.ingres
 // ═══════════════════════════════════════════════════
 let eVarId=null;
 function todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function openVarModal(id=null){
-  eVarId=id;populateMes('var-mes');
-  const del=document.getElementById('var-del-btn');
-  if(id!==null){const it=S.gastosVariables.find(x=>x.id===id);document.getElementById('var-modal-title').innerHTML='<i class="ph ph-pencil-simple"></i>Editar gasto';document.getElementById('var-mes').value=it.mes;document.getElementById('var-cat').value=it.cat;document.getElementById('var-valor').value=it.valor;document.getElementById('var-desc').value=it.desc;document.getElementById('var-fecha').value=it.fecha||todayStr();del.style.display='flex';}
-  else{document.getElementById('var-modal-title').innerHTML='<i class="ph ph-shopping-cart"></i>Nuevo gasto';document.getElementById('var-valor').value='';document.getElementById('var-desc').value='';document.getElementById('var-fecha').value=todayStr();del.style.display='none';}
-  openModal('var-modal');
-}
+function populateFijoDestino(mes,selectedId=null){const sel=document.getElementById('var-fijo');if(!sel)return;const fijos=S.gastosFijos.filter(f=>Number(f.valor||0)>0);sel.innerHTML='<option value="">Selecciona un gasto fijo...</option>'+fijos.map(f=>`<option value="${f.id}" ${String(f.id)===String(selectedId)?'selected':''}>${f.item} · ${f.ubi} · ${fmt(f.valor)}</option>`).join('');}
+function updateVariableMovementUI(){const tipo=document.getElementById('var-tipo-mov')?.value||'gasto',destino=document.getElementById('var-destino')?.value||'libre';const dw=document.getElementById('var-destino-wrap'),fw=document.getElementById('var-fijo-wrap');if(dw)dw.style.display=tipo==='retiro'?'block':'none';if(fw)fw.style.display=(tipo==='retiro'&&destino==='fijo')?'block':'none';const title=document.getElementById('var-modal-title');if(title)title.innerHTML=tipo==='retiro'?'<i class="ph ph-bank"></i>Registrar retiro':'<i class="ph ph-shopping-cart"></i>Nuevo gasto';}
+function openVarModal(id=null){eVarId=id;populateMes('var-mes');populateFijoDestino(S.mesActivo);const del=document.getElementById('var-del-btn');if(id!==null){const it=S.gastosVariables.find(x=>x.id===id);if(!it)return;document.getElementById('var-modal-title').innerHTML='<i class="ph ph-pencil-simple"></i>Editar movimiento';document.getElementById('var-mes').value=it.mes;document.getElementById('var-cat').value=it.cat||'Otros';document.getElementById('var-valor').value=it.valor;document.getElementById('var-desc').value=it.desc||'';document.getElementById('var-fecha').value=it.fecha||todayStr();document.getElementById('var-tipo-mov').value=isRetiro(it)?'retiro':'gasto';document.getElementById('var-destino').value=it.destinoTipo==='fijo'?'fijo':'libre';populateFijoDestino(it.mes,it.destinoFijoId||null);del.style.display='flex';}else{document.getElementById('var-modal-title').innerHTML='<i class="ph ph-shopping-cart"></i>Nuevo gasto';document.getElementById('var-valor').value='';document.getElementById('var-desc').value='';document.getElementById('var-fecha').value=todayStr();document.getElementById('var-tipo-mov').value='gasto';document.getElementById('var-destino').value='libre';populateFijoDestino(S.mesActivo);del.style.display='none';}updateVariableMovementUI();openModal('var-modal');}
 function editVariable(id){openVarModal(id);}
-function saveVariable(){
-  const mes=parseInt(document.getElementById('var-mes').value),cat=document.getElementById('var-cat').value,valor=parseFloat(document.getElementById('var-valor').value)||0,desc=document.getElementById('var-desc').value.trim(),fecha=document.getElementById('var-fecha').value||todayStr();
-  if(!valor){toast('Ingresa un valor','ph-warning');return;}
-  if(eVarId!==null){const it=S.gastosVariables.find(x=>x.id===eVarId);it.mes=mes;it.cat=cat;it.valor=valor;it.desc=desc;it.fecha=fecha;toast('Gasto actualizado','ph-check-circle');}
-  else{S.gastosVariables.push({id:nid(),mes,cat,valor,desc,fecha});toast('Gasto registrado','ph-check-circle');}
-  save();closeModal('var-modal');renderVar();save();
-}
+function saveVariable(){const mes=parseInt(document.getElementById('var-mes').value),cat=document.getElementById('var-cat').value,valor=parseFloat(document.getElementById('var-valor').value)||0,desc=document.getElementById('var-desc').value.trim(),fecha=document.getElementById('var-fecha').value||todayStr(),movimientoTipo=document.getElementById('var-tipo-mov').value||'gasto',destinoTipo=movimientoTipo==='retiro'?(document.getElementById('var-destino').value||'libre'):'ninguno',destinoFijoId=movimientoTipo==='retiro'&&destinoTipo==='fijo'?(parseInt(document.getElementById('var-fijo').value)||null):null;if(!valor){toast('Ingresa un valor','ph-warning');return;}if(movimientoTipo==='retiro'&&destinoTipo==='fijo'&&!destinoFijoId){toast('Selecciona el gasto fijo asociado','ph-warning');return;}if(eVarId!==null){const it=S.gastosVariables.find(x=>x.id===eVarId);if(!it)return;const oldAuto=it.pagoAsociadoAutomaticamente===true,oldMes=it.mes,oldFijo=it.destinoFijoId;if(oldAuto&&oldFijo&&(String(oldFijo)!==String(destinoFijoId)||oldMes!==mes))S.pagos[oldMes+'_'+oldFijo]='pendiente';Object.assign(it,{mes,cat,valor,desc,fecha,movimientoTipo,destinoTipo,destinoFijoId,pagoAsociadoAutomaticamente:false});if(movimientoTipo==='retiro'&&destinoTipo==='fijo'&&destinoFijoId){S.pagos[mes+'_'+destinoFijoId]='pagado';it.pagoAsociadoAutomaticamente=true;}toast(movimientoTipo==='retiro'?'Retiro actualizado':'Gasto actualizado','ph-check-circle');}else{const it={id:nid(),mes,cat,valor,desc,fecha,movimientoTipo,destinoTipo,destinoFijoId,pagoAsociadoAutomaticamente:false};if(movimientoTipo==='retiro'&&destinoTipo==='fijo'&&destinoFijoId){S.pagos[mes+'_'+destinoFijoId]='pagado';it.pagoAsociadoAutomaticamente=true;}S.gastosVariables.push(it);toast(movimientoTipo==='retiro'?'Retiro registrado ✓':'Gasto registrado','ph-check-circle');}save();closeModal('var-modal');renderVar();renderFij();renderDash();}
 function confirmDelVar(id){eVarId=id;deleteVariable();}
-function deleteVariable(){if(!confirm('¿Eliminar este gasto?'))return;S.gastosVariables=S.gastosVariables.filter(x=>x.id!==eVarId);save();closeModal('var-modal');renderVar();toast('Eliminado','ph-trash');save();}
+function deleteVariable(){if(!confirm('¿Eliminar este movimiento?'))return;const it=S.gastosVariables.find(x=>x.id===eVarId);if(it?.pagoAsociadoAutomaticamente&&it.destinoFijoId!=null)S.pagos[it.mes+'_'+it.destinoFijoId]='pendiente';S.gastosVariables=S.gastosVariables.filter(x=>x.id!==eVarId);save();closeModal('var-modal');renderVar();renderFij();renderDash();toast('Eliminado','ph-trash');}
 
 // ═══════════════════════════════════════════════════
 //  FIJO CRUD
@@ -1930,16 +1939,16 @@ async function exportExcel(){
   MESES.forEach((m,i)=>{
     const rows=S.gastosVariables.filter(x=>x.mes===i);if(!rows.length)return;
     setCell(ws4,r4,0,cell(m.toUpperCase(),ST.mesHeader));for(let c=1;c<5;c++)setCell(ws4,r4,c,cell('',ST.mesHeader));ws4['!merges'].push({s:{r:r4,c:0},e:{r:r4,c:4}});r4++;
-    ['FECHA','CATEGORÍA','DESCRIPCIÓN','VALOR',''].forEach((h,c)=>setCell(ws4,r4,c,cell(h,ST.subtitulo)));r4++;
-    rows.forEach(g=>{setCell(ws4,r4,0,cell(g.fecha||'—',{...ST.datoLabel,alignment:{horizontal:'center'}}));setCell(ws4,r4,1,cell(g.cat,ST.dato));setCell(ws4,r4,2,cell(g.desc||'—',ST.dato));setCell(ws4,r4,3,numFmt(g.valor,ST.dato));setCell(ws4,r4,4,cell('',ST.datoRight));r4++;});
-    const tot=rows.reduce((a,b)=>a+b.valor,0);
-    setCell(ws4,r4,0,cell('Total '+m,ST.totalLabel));setCell(ws4,r4,1,cell('',ST.total));setCell(ws4,r4,2,cell('',ST.total));setCell(ws4,r4,3,numFmt(tot,ST.total));setCell(ws4,r4,4,cell('',ST.totalRight));r4++;
+    ['FECHA','CATEGORÍA','DESCRIPCIÓN','VALOR','TIPO / DESTINO'].forEach((h,c)=>setCell(ws4,r4,c,cell(h,ST.subtitulo)));r4++;
+    rows.forEach(g=>{const retiro=isRetiro(g),fijo=getFijoById(g.destinoFijoId);setCell(ws4,r4,0,cell(g.fecha||'—',{...ST.datoLabel,alignment:{horizontal:'center'}}));setCell(ws4,r4,1,cell(g.cat,ST.dato));setCell(ws4,r4,2,cell(g.desc||'—',ST.dato));setCell(ws4,r4,3,numFmt(g.valor,ST.dato));setCell(ws4,r4,4,cell(retiro?`Retiro${fijo?' → '+fijo.item:''}`:'Gasto real',ST.datoRight));r4++;});
+    const tot=rows.filter(g=>!isRetiro(g)).reduce((a,b)=>a+b.valor,0),totRet=rows.filter(g=>isRetiro(g)).reduce((a,b)=>a+b.valor,0);
+    setCell(ws4,r4,0,cell('Total gastos reales '+m,ST.totalLabel));setCell(ws4,r4,1,cell('',ST.total));setCell(ws4,r4,2,cell('',ST.total));setCell(ws4,r4,3,numFmt(tot,ST.total));setCell(ws4,r4,4,cell(totRet?`Retiros: ${fmt(totRet)}`:'',ST.totalRight));r4++;
     setCell(ws4,r4,0,cell('',ST.vacio));ws4['!merges'].push({s:{r:r4,c:0},e:{r:r4,c:4}});r4++;
     setCell(ws4,r4,0,cell('',ST.vacio));ws4['!merges'].push({s:{r:r4,c:0},e:{r:r4,c:4}});r4++;
   });
-  const gtVar=S.gastosVariables.reduce((a,b)=>a+b.valor,0);
+  const gtVar=S.gastosVariables.filter(g=>!isRetiro(g)).reduce((a,b)=>a+b.valor,0);
   setCell(ws4,r4,0,cell('TOTAL ANUAL',ST.totalLabel));setCell(ws4,r4,1,cell('',ST.total));setCell(ws4,r4,2,cell('',ST.total));setCell(ws4,r4,3,numFmt(gtVar,ST.total));setCell(ws4,r4,4,cell('',ST.totalRight));
-  ws4['!cols']=[{wch:13},{wch:16},{wch:28},{wch:16},{wch:4}];
+  ws4['!cols']=[{wch:13},{wch:16},{wch:28},{wch:16},{wch:24}];
   XLSX.utils.book_append_sheet(wb,ws4,'Gastos Variables');
 
   // HOJA 5: Control de pagos
@@ -1986,7 +1995,7 @@ function buildReportHTML(m){
   const border=isDark?'rgba(6,182,212,0.15)':'rgba(14,116,144,0.15)';
 
   const catRows=CATS.map((c,i)=>{
-    const v=S.gastosVariables.filter(g=>g.mes===m&&g.cat===c).reduce((a,b)=>a+b.valor,0);
+    const v=S.gastosVariables.filter(g=>g.mes===m&&!isRetiro(g)&&g.cat===c).reduce((a,b)=>a+b.valor,0);
     return v>0?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid ${border};font-size:12px;"><div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:${CAT_COLORS[i]};"></div><span style="color:${text2};">${c}</span></div><span style="font-weight:700;color:#e05252;">${fmt(v)}</span></div>`:'';
   }).join('');
 
@@ -2060,7 +2069,7 @@ function buildSheetsPayload(){
   return{
     ingresos:S.ingresos.map(i=>({mes:MESES[i.mes],fecha:i.fecha||'',valor:i.valor,desc:i.desc})),
     gastosFijos:S.gastosFijos.map(f=>({item:f.item,ubi:f.ubi,valor:f.valor,fechaLimite:f.diaLimite?'Día '+f.diaLimite:''})),
-    gastosVariables:S.gastosVariables.map(g=>({mes:MESES[g.mes],fecha:g.fecha||'',cat:g.cat,valor:g.valor,desc:g.desc})),
+    gastosVariables:S.gastosVariables.map(g=>({mes:MESES[g.mes],fecha:g.fecha||'',cat:g.cat,valor:g.valor,desc:g.desc,movimientoTipo:g.movimientoTipo||'gasto',destinoTipo:g.destinoTipo||'ninguno',destinoFijoId:g.destinoFijoId||''})),
     nu:(S.nu||[]).map(m=>({tipo:m.tipo,mes:MESES[m.mes],fecha:m.fecha||'',valor:m.valor,desc:m.desc})),
     proyeccion:MESES.map((m,i)=>({mes:m,ingresos:ingM(i),fijos:fijM(i),variables:varM(i),total:gasM(i),saldo:ingM(i)-gasM(i)}))
   };
@@ -2354,6 +2363,24 @@ async function pullFromSheets(){
 }
 
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  GOOGLE DRIVE — COMPROBANTES
+// ═══════════════════════════════════════════════════
+const DRIVE_READONLY_SCOPE='https://www.googleapis.com/auth/drive.readonly';
+const DEFAULT_DRIVE_ROOT_ID='1cbVPEYkp2aBVZgVA_dFGhhqpAvUxgNT3';
+let driveAccessToken=null,driveCurrentFolderId=null,driveBreadcrumbs=[];
+function driveFolderUrl(id){return 'https://drive.google.com/drive/folders/'+encodeURIComponent(id);}
+function updateDriveUI(){const root=S.drive?.rootFolderId||DEFAULT_DRIVE_ROOT_ID;const inp=document.getElementById('drive-root-id');if(inp)inp.value=root;const link=document.getElementById('drive-open-link');if(link)link.href=driveFolderUrl(root);const status=document.getElementById('drive-status-text');if(status)status.textContent=driveAccessToken?'Google Drive conectado ✓':(S.drive?.connected?'Conectado anteriormente · reconecta para explorar':'Abrir carpetas de Google Drive');const label=document.getElementById('drive-connect-label');if(label)label.textContent=driveAccessToken?'Actualizar acceso a Drive':'Conectar Google Drive';}
+function saveDriveRoot(){const id=(document.getElementById('drive-root-id')?.value||'').trim();if(!id){toast('Ingresa el ID de la carpeta','ph-warning');return;}if(!S.drive)S.drive={};S.drive.rootFolderId=id;S.drive.rootFolderName='SERVICIOS';S.drive.connected=!!driveAccessToken;save();const link=document.getElementById('drive-open-link');if(link)link.href=driveFolderUrl(id);toast('Carpeta de Drive guardada ✓','ph-check-circle');}
+async function connectGoogleDrive(){if(!firebaseCurrentUser){toast('Primero inicia sesión','ph-warning');return;}try{const provider=new firebase.auth.GoogleAuthProvider();provider.addScope(DRIVE_READONLY_SCOPE);provider.setCustomParameters({prompt:'consent',login_hint:firebaseCurrentUser.email||''});let result;const hasGoogle=(firebaseCurrentUser.providerData||[]).some(p=>p.providerId==='google.com');if(hasGoogle){result=await firebaseCurrentUser.reauthenticateWithPopup(provider);}else{result=await firebaseCurrentUser.linkWithPopup(provider);firebaseCurrentUser=result.user;}const credential=firebase.auth.GoogleAuthProvider.credentialFromResult(result);driveAccessToken=credential?.accessToken||null;if(!driveAccessToken)throw new Error('Google no devolvió un token de acceso a Drive.');if(!S.drive)S.drive={};S.drive.connected=true;S.drive.rootFolderId=S.drive.rootFolderId||DEFAULT_DRIVE_ROOT_ID;await save();updateDriveUI();updateSettingsProfile();toast('Google Drive conectado ✓','ph-google-drive-logo');await openDriveRoot();}catch(err){console.error('[Drive] connect:',err);if(err.code==='auth/popup-closed-by-user')toast('Se canceló el acceso a Google Drive','ph-warning');else if(err.code==='auth/credential-already-in-use')toast('Ese Google ya pertenece a otra cuenta de Finanzas. Inicia sesión con esa cuenta o vincula otro Google.','ph-warning');else if(err.code==='auth/popup-blocked')toast('El navegador bloqueó la ventana. Permite ventanas emergentes.','ph-warning');else toast('No se pudo conectar Drive: '+(err.message||err),'ph-warning');}}
+async function driveFetchJson(url){if(!driveAccessToken)throw new Error('Conecta Google Drive primero.');const res=await fetch(url,{headers:{Authorization:'Bearer '+driveAccessToken}});if(res.status===401){driveAccessToken=null;updateDriveUI();throw new Error('El acceso a Drive expiró. Pulsa "Conectar Google Drive" otra vez.');}if(!res.ok){let msg='Error de Google Drive';try{const j=await res.json();msg=j.error?.message||msg}catch(_){}throw new Error(msg);}return res.json();}
+async function listDriveFolder(folderId){const q=`'${folderId.replace(/'/g,"\\'")}' in parents and trashed = false`;const params=new URLSearchParams({q,orderBy:'folder,name',pageSize:'1000',spaces:'drive',includeItemsFromAllDrives:'true',supportsAllDrives:'true',fields:'files(id,name,mimeType,webViewLink,webContentLink,modifiedTime,size,iconLink,capabilities(canDownload))'});return driveFetchJson('https://www.googleapis.com/drive/v3/files?'+params.toString());}
+function renderDriveBreadcrumbs(){const el=document.getElementById('drive-breadcrumbs');if(!el)return;el.innerHTML=driveBreadcrumbs.map((b,i)=>`<button onclick="navigateDriveBreadcrumb(${i})">${escapeHtml(b.name)}</button>${i<driveBreadcrumbs.length-1?'<span>›</span>':''}`).join('');}
+async function renderDriveFolder(folderId,name){const list=document.getElementById('drive-list');if(!list)return;list.innerHTML='<div class="drive-empty"><i class="ph ph-spinner" style="font-size:28px;display:block;margin-bottom:8px;animation:spin 1s linear infinite;"></i>Cargando carpeta...</div>';try{const data=await listDriveFolder(folderId);driveCurrentFolderId=folderId;const files=(data.files||[]).sort((a,b)=>{const af=a.mimeType==='application/vnd.google-apps.folder',bf=b.mimeType==='application/vnd.google-apps.folder';return af===bf?a.name.localeCompare(b.name,'es'):af?-1:1;});renderDriveBreadcrumbs();if(!files.length){list.innerHTML='<div class="drive-empty"><i class="ph ph-folder-notch-open" style="font-size:32px;display:block;margin-bottom:8px;"></i>Esta carpeta está vacía.</div>';return;}list.innerHTML=files.map(f=>{const folder=f.mimeType==='application/vnd.google-apps.folder';const icon=folder?'ph-folder':'ph-file-pdf';const sub=folder?'Carpeta':(f.modifiedTime?`Modificado ${new Date(f.modifiedTime).toLocaleDateString('es-CO')}`:'Archivo');const openUrl=f.webViewLink||driveFolderUrl(f.id);const safeId=String(f.id).replace(/'/g,"\\'");return `<div class="drive-item ${folder?'folder':'file'}" ${folder?`onclick="openDriveFolder('${safeId}','${escapeHtml(f.name).replace(/'/g,"\\'")}')"`:''}><div class="drive-icon"><i class="ph-fill ${icon}"></i></div><div class="drive-body"><div class="drive-name">${escapeHtml(f.name)}</div><div class="drive-sub">${sub}</div></div><div class="drive-actions">${folder?'':`<a class="btn-icon" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Abrir comprobante"><i class="ph ph-arrow-square-out"></i></a>`}<button class="btn-icon" onclick="event.stopPropagation();window.open('${escapeHtml(openUrl)}','_blank','noopener')" title="Abrir"><i class="ph ph-caret-right"></i></button></div></div>`;}).join('');}catch(err){console.error('[Drive] list:',err);list.innerHTML=`<div class="drive-empty"><i class="ph ph-warning-circle" style="font-size:30px;display:block;margin-bottom:8px;color:var(--accent);"></i>${escapeHtml(err.message)}<button class="btn-primary" style="margin-top:10px;" onclick="connectGoogleDrive()"><i class="ph ph-google-logo"></i>Volver a conectar</button></div>`;}}
+async function openDriveRoot(){const id=(S.drive?.rootFolderId||document.getElementById('drive-root-id')?.value||DEFAULT_DRIVE_ROOT_ID).trim();if(!id){toast('Configura la carpeta raíz','ph-warning');return;}if(!driveAccessToken){window.open(driveFolderUrl(id),'_blank','noopener');toast('Puedes abrir la carpeta directamente en Drive o conectar Drive para verla dentro de Finanzas.','ph-google-drive-logo');return;}driveBreadcrumbs=[{id,name:S.drive?.rootFolderName||'SERVICIOS'}];await renderDriveFolder(id,S.drive?.rootFolderName||'SERVICIOS');}
+async function openDriveFolder(id,name){driveBreadcrumbs.push({id,name});await renderDriveFolder(id,name);}
+async function navigateDriveBreadcrumb(index){driveBreadcrumbs=driveBreadcrumbs.slice(0,index+1);const b=driveBreadcrumbs[driveBreadcrumbs.length-1];await renderDriveFolder(b.id,b.name);}
+
 // FIREBASE AUTH + FIRESTORE
 let authMode='login';
 let pendingGoogleCredential=null;
@@ -2375,7 +2402,7 @@ function updateFirebaseStatus(t){const e=document.getElementById('firebase-statu
 function updateFirebaseUserUI(){const email=firebaseCurrentUser?.email||S.profile?.email||'';const e=document.getElementById('settings-email-display');if(e)e.textContent=email||'Cuenta Firebase';const b=document.getElementById('firebase-user-badge');if(b)b.innerHTML='<i class="ph ph-cloud-check"></i><span>'+escapeHtml(email||'Cuenta autenticada')+' · Firebase</span>';updateLegacyImportUI()}
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 async function importLegacyLocalData(forceReplace=false){if(!firebaseCurrentUser||!firebaseDataReady){showAuthError('Primero inicia sesión en Firebase.');return false}const legacy=getLegacyLocalData();if(!legacy){toast('No se encontraron datos anteriores en este navegador','ph-info');updateLegacyImportUI();return false}const action=forceReplace?'reemplazar':'importar y combinar';if(!confirm('Se encontraron datos guardados anteriormente en este dispositivo. ¿Quieres '+action+' los datos actuales de Firebase?'))return false;try{const imported=mergeState(DEF_STATE,legacy);if(forceReplace)S=imported;else{S={...S, ...imported, profile:{...(S.profile||{}),...(imported.profile||{})}, sheets:{...(S.sheets||{}),...(imported.sheets||{})}, pagos:{...(S.pagos||{}),...(imported.pagos||{})}};if(Array.isArray(legacy.ingresos)&&legacy.ingresos.length)S.ingresos=legacy.ingresos;if(Array.isArray(legacy.gastosVariables)&&legacy.gastosVariables.length)S.gastosVariables=legacy.gastosVariables;if(Array.isArray(legacy.gastosFijos)&&legacy.gastosFijos.length)S.gastosFijos=legacy.gastosFijos;if(legacy.pagos&&typeof legacy.pagos==='object')S.pagos={...(S.pagos||{}),...legacy.pagos};if(Array.isArray(legacy.nu)&&legacy.nu.length)S.nu=legacy.nu;S.nextId=Math.max(Number(S.nextId||0),Number(legacy.nextId||0));S.nextNuId=Math.max(Number(S.nextNuId||0),Number(legacy.nextNuId||0))}if(firebaseCurrentUser.email&&!S.profile.email)S.profile.email=firebaseCurrentUser.email;await firebaseDb.collection('users').doc(firebaseCurrentUser.uid).collection('app').doc('data').set({...clone(S),_schemaVersion:1,_updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:false});firebaseDataReady=true;updateLegacyImportUI();updateFirebaseUserUI();updatePill();loadProfile();renderDash();renderPage(S.currentPage||'dashboard');toast('Datos anteriores importados correctamente ✓','ph-upload-simple');updateFirebaseStatus('Datos importados y sincronizados ✓');return true}catch(err){console.error('[Firebase] import legacy:',err);toast('No se pudieron importar los datos','ph-warning');updateFirebaseStatus('Error al importar datos');return false}}
-async function loadFirebaseData(user){firebaseCurrentUser=user;firebaseDataReady=false;try{const ref=firebaseDb.collection('users').doc(user.uid).collection('app').doc('data'),snap=await ref.get();let data=snap.exists?snap.data():null;const legacy=getLegacyLocalData();if(data){delete data._updatedAt;delete data._schemaVersion;S=mergeState(DEF_STATE,data);if(legacy)updateLegacyImportUI()}else{S=legacy?mergeState(DEF_STATE,legacy):clone(DEF_STATE);S.profile=S.profile||{};if(user.email&&!S.profile.email)S.profile.email=user.email;await ref.set({...clone(S),_schemaVersion:1,_createdAt:firebase.firestore.FieldValue.serverTimestamp(),_updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(legacy)toast('Tus datos anteriores fueron cargados automáticamente ✓','ph-upload-simple')}if(!S.profile)S.profile=clone(DEF_STATE.profile);if(!S.sheets)S.sheets=clone(DEF_STATE.sheets);if(!S.pagos)S.pagos={};if(!S.nu)S.nu=[];if(!S.nextNuId)S.nextNuId=200;if(!S.nextId)S.nextId=100;if(user.email&&!S.profile.email)S.profile.email=user.email;firebaseDataReady=true;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.add('hidden');document.getElementById('main-shell').style.visibility='visible';updateFirebaseUserUI();applyTheme(S.theme||'dark');updatePill();loadProfile();renderDash();initDate();checkMensualReset();updateFirebaseStatus('Datos sincronizados ✓');checkShareTarget()}catch(err){console.error('[Firebase] load:',err);firebaseDataReady=false;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');showAuthError('No se pudieron cargar tus datos: '+(err.message||err))}}
+async function loadFirebaseData(user){firebaseCurrentUser=user;firebaseDataReady=false;try{const ref=firebaseDb.collection('users').doc(user.uid).collection('app').doc('data'),snap=await ref.get();let data=snap.exists?snap.data():null;const legacy=getLegacyLocalData();if(data){delete data._updatedAt;delete data._schemaVersion;S=mergeState(DEF_STATE,data);if(legacy)updateLegacyImportUI()}else{S=legacy?mergeState(DEF_STATE,legacy):clone(DEF_STATE);S.profile=S.profile||{};if(user.email&&!S.profile.email)S.profile.email=user.email;await ref.set({...clone(S),_schemaVersion:1,_createdAt:firebase.firestore.FieldValue.serverTimestamp(),_updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(legacy)toast('Tus datos anteriores fueron cargados automáticamente ✓','ph-upload-simple')}if(!S.profile)S.profile=clone(DEF_STATE.profile);if(!S.sheets)S.sheets=clone(DEF_STATE.sheets);if(!S.drive)S.drive=clone(DEF_STATE.drive);if(!S.pagos)S.pagos={};if(!S.nu)S.nu=[];if(!S.nextNuId)S.nextNuId=200;if(!S.nextId)S.nextId=100;if(user.email&&!S.profile.email)S.profile.email=user.email;(S.gastosVariables||[]).forEach(g=>{if(!g.movimientoTipo)g.movimientoTipo='gasto';if(!g.destinoTipo)g.destinoTipo=isRetiro(g)?'libre':'ninguno';if(g.destinoFijoId===undefined)g.destinoFijoId=null;if(g.pagoAsociadoAutomaticamente===undefined)g.pagoAsociadoAutomaticamente=false;});firebaseDataReady=true;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.add('hidden');document.getElementById('main-shell').style.visibility='visible';updateFirebaseUserUI();applyTheme(S.theme||'dark');updatePill();loadProfile();renderDash();initDate();checkMensualReset();updateFirebaseStatus('Datos sincronizados ✓');checkShareTarget()}catch(err){console.error('[Firebase] load:',err);firebaseDataReady=false;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');showAuthError('No se pudieron cargar tus datos: '+(err.message||err))}}
 setTimeout(updateLegacyImportUI,0);
 firebaseAuth.onAuthStateChanged(async user=>{if(user)await loadFirebaseData(user);else{firebaseCurrentUser=null;firebaseDataReady=false;document.getElementById('main-shell').style.visibility='hidden';document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('auth-password').value='';updateLegacyImportUI()}})
 
