@@ -17,6 +17,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBG3rfE0gBnB816utXgFqcqvrpa6Xz0-x8",authDomain:"finanzas-e04ef.firebaseapp.com",projectId:"finanzas-e04ef",storageBucket:"finanzas-e04ef.firebasestorage.app",messagingSenderId:"331577489242",appId:"1:331577489242:web:0b1065acd3b3de2eeb2563",measurementId:"G-V3Y1XRNL0G"};
+firebase.initializeApp(firebaseConfig);
+const firebaseAuth=firebase.auth();
+const firebaseDb=firebase.firestore();
+if(firebaseConfig.measurementId)firebase.analytics();
+firebaseDb.enablePersistence({synchronizeTabs:true}).catch(err=>console.warn('[Firebase] Persistencia offline:',err.code||err.message));
+let firebaseCurrentUser=null,firebaseDataReady=false,firebaseSaveTimer=null;
+</script>
 <style>
 /* ─── DARK THEME (default) ─────────────────────────── */
 :root, [data-theme="dark"] {
@@ -359,12 +372,27 @@ select.form-input option{background:var(--bg3);}
 .sync-bar .sync-btn{margin-left:auto;padding:4px 10px;background:var(--brand-dark);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
 .dot-pulse{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* FIREBASE AUTH */
+.auth-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}.auth-screen.hidden{display:none}.auth-card{width:min(420px,100%);background:var(--card-bg);border:1px solid var(--border2);border-radius:20px;padding:24px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}.auth-brand-icon{width:48px;height:48px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,var(--brand-dark),var(--brand))}.auth-brand-icon img{width:100%;height:100%;object-fit:cover}.auth-brand h2{font-size:22px}.auth-brand h2 span{color:var(--brand-light)}.auth-subtitle{font-size:12px;color:var(--text3);margin-top:2px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:18px}.auth-tab{padding:9px;border:0;border-radius:8px;background:transparent;color:var(--text3);font:700 12px Inter,sans-serif;cursor:pointer}.auth-tab.active{background:var(--brand);color:#fff}.auth-error{display:none;background:var(--orange-dim);border:1px solid rgba(224,82,82,.25);color:var(--accent-light);padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5;margin-bottom:12px}.auth-help{text-align:center;font-size:11px;color:var(--text3);margin-top:12px}.auth-link{border:0;background:none;color:var(--brand);font:600 11px Inter,sans-serif;cursor:pointer}.auth-loading{position:fixed;inset:0;z-index:1100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}.auth-loading.hidden{display:none}.auth-spinner{font-size:32px;color:var(--brand);animation:spin 1s linear infinite}.firebase-user-badge{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);margin:8px 0 12px}.firebase-user-badge i{color:var(--brand)}
 </style>
 </head>
 <body>
+<div class="auth-loading" id="auth-loading"><i class="ph ph-spinner auth-spinner"></i><div style="font-size:13px;font-weight:600;color:var(--text2)">Conectando con Firebase...</div></div>
+<section class="auth-screen hidden" id="auth-screen"><div class="auth-card">
+<div class="auth-brand"><div class="auth-brand-icon"><img src="icons/icon-192.png" alt="Finanzas"></div><div><h2>Fin<span>anzas</span></h2><div class="auth-subtitle">Tus finanzas, sincronizadas y seguras</div></div></div>
+<div class="auth-tabs"><button class="auth-tab active" id="auth-tab-login" onclick="setAuthMode('login')">Ingresar</button><button class="auth-tab" id="auth-tab-register" onclick="setAuthMode('register')">Crear cuenta</button></div>
+<div class="auth-error" id="auth-error"></div>
+<div class="form-section"><label class="form-label"><i class="ph ph-envelope"></i>Correo electrónico</label><input class="form-input" type="email" id="auth-email" autocomplete="email" placeholder="tu@correo.com"></div>
+<div class="form-section"><label class="form-label"><i class="ph ph-lock-key"></i>Contraseña</label><input class="form-input" type="password" id="auth-password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')submitAuth()"></div>
+<button class="btn-primary" id="auth-submit" onclick="submitAuth()"><i class="ph ph-sign-in"></i>Ingresar</button>
+<div class="auth-help" id="auth-forgot-wrap"><button class="auth-link" onclick="resetAuthPassword()">¿Olvidaste tu contraseña?</button></div>
+<div class="auth-help" id="auth-register-help" style="display:none">Al crear tu cuenta, tus datos quedarán aislados bajo tu UID de Firebase.</div>
+</div></section>
+
 
 <!-- ═══════════════════ MAIN SHELL ═══════════════════ -->
-<div class="shell" id="main-shell">
+<div class="shell" id="main-shell" style="visibility:hidden;">
 
   <!-- TOP BAR -->
   <header class="topbar">
@@ -685,7 +713,7 @@ select.form-input option{background:var(--bg3);}
     <button class="btn-back" onclick="closeSettings()"><i class="ph ph-arrow-left"></i></button>
     <h2>Configuración</h2>
   </div>
-  <div class="settings-body">
+  <div class="settings-body"><div class="firebase-user-badge" id="firebase-user-badge"><i class="ph ph-cloud-check"></i><span>Cuenta Firebase</span></div>
     <!-- Profile summary -->
     <div id="settings-profile-card" style="cursor:pointer;" onclick="openSubPage('profile-page')" class="settings-item">
       <div class="si-icon" style="background:linear-gradient(135deg,var(--brand-dark),var(--brand));"><i class="ph-fill ph-user" style="color:#fff;"></i></div>
@@ -734,7 +762,8 @@ select.form-input option{background:var(--bg3);}
       <div class="si-arrow"><i class="ph ph-caret-right"></i></div>
     </div>
 
-    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:20px;">Finanzas v4.0 · Datos guardados en tu dispositivo</p>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:20px;">Finanzas v5.0 · Datos sincronizados con Firebase</p>
+  <button class="btn-danger-full" style="margin-top:12px" onclick="logoutFirebase()"><i class="ph ph-sign-out"></i>Cerrar sesión</button><div id="firebase-status-text" style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px">Firebase listo</div>
   </div>
 </div>
 
@@ -791,7 +820,7 @@ select.form-input option{background:var(--bg3);}
     <div class="toggle-row">
       <div class="toggle-label">
         <i class="ph ph-cell-signal-full" style="color:var(--brand);"></i>
-        <span>Sincronizar con Sheets</span>
+        <span>Sincronizar con Firebase</span>
       </div>
       <button class="toggle-switch" id="sync-toggle" onclick="this.classList.toggle('on')"></button>
     </div>
@@ -815,7 +844,7 @@ select.form-input option{background:var(--bg3);}
     <div style="text-align:center;padding:18px 0 10px;">
       <i class="ph-fill ph-google-sheets-logo" style="font-size:52px;color:#1d6f42;display:block;margin-bottom:8px;"></i>
       <p style="font-size:15px;font-weight:700;margin-bottom:4px;">Conecta Google Sheets</p>
-      <p style="font-size:12px;color:var(--text3);">Tu hoja funciona como base de datos real</p>
+      <p style="font-size:12px;color:var(--text3);">Integración opcional para respaldo/exportación</p>
     </div>
     <div style="display:flex;justify-content:center;margin-bottom:12px;">
       <span class="badge badge-noapl" id="sheets-conn-badge"><i class="ph ph-plug"></i>No conectado</span>
@@ -1085,12 +1114,14 @@ const DEF_STATE={
   nextId:100
 };
 
-let S=JSON.parse(localStorage.getItem('finanzas2026_v2')||'null')||JSON.parse(JSON.stringify(DEF_STATE));
+let S=JSON.parse(JSON.stringify(DEF_STATE));
 let charts={};
 let deferredInstall=null;
 let expState={format:null,year:2026,month:null};
-
-function save(){localStorage.setItem('finanzas2026_v2',JSON.stringify(S));}
+function clone(obj){return JSON.parse(JSON.stringify(obj));}
+function mergeState(base,data){const out=clone(base);if(!data||typeof data!=='object')return out;Object.keys(data).forEach(k=>{if(data[k]&&typeof data[k]==='object'&&!Array.isArray(data[k])&&out[k]&&typeof out[k]==='object'&&!Array.isArray(out[k]))out[k]={...out[k],...data[k]};else out[k]=data[k]});return out;}
+async function save(){if(!firebaseCurrentUser||!firebaseDataReady)return;try{await firebaseDb.collection('users').doc(firebaseCurrentUser.uid).collection('app').doc('data').set({...clone(S),_updatedAt:firebase.firestore.FieldValue.serverTimestamp(),_schemaVersion:1});updateFirebaseStatus('Datos sincronizados ✓')}catch(err){console.error('[Firebase] save:',err);updateFirebaseStatus('Sin conexión · guardado pendiente')}}
+function queueSave(){clearTimeout(firebaseSaveTimer);firebaseSaveTimer=setTimeout(()=>save(),250)}
 function nid(){return S.nextId++;}
 function fmt(n){
   const abs=Math.round(Math.abs(n));
@@ -1117,19 +1148,8 @@ function initDate(){
 
 // Cada mes, auto-resetea pagos pendientes para el mes actual
 function checkMensualReset(){
-  const now=new Date();
-  const keyMes='lastResetMes_'+now.getFullYear()+'_'+now.getMonth();
-  if(!localStorage.getItem(keyMes)){
-    // Resetear pagos del mes actual a "pendiente"
-    const m=now.getMonth();
-    S.gastosFijos.forEach(f=>{
-      const k=m+'_'+f.id;
-      if(S.pagos[k]==='pagado')S.pagos[k]='pendiente';
-    });
-    save();
-    localStorage.setItem(keyMes,'done');
-  }
-  // Verificar si hay pagos vencidos y notificar
+  const now=new Date(),keyMes=now.getFullYear()+'_'+now.getMonth();
+  if(S.lastResetMes!==keyMes){const m=now.getMonth();S.gastosFijos.forEach(f=>{const k=m+'_'+f.id;if(S.pagos[k]==='pagado')S.pagos[k]='pendiente'});S.lastResetMes=keyMes;save()}
   checkVencidos();
 }
 
@@ -1700,10 +1720,10 @@ function saveIngreso(){
   if(!valor){toast('Ingresa un valor','ph-warning');return;}
   if(eIngId!==null){const it=S.ingresos.find(x=>x.id===eIngId);it.mes=mes;it.valor=valor;it.desc=desc;toast('Ingreso actualizado','ph-check-circle');}
   else{S.ingresos.push({id:nid(),mes,valor,desc});toast('Ingreso agregado','ph-check-circle');}
-  save();closeModal('ing-modal');renderIng();syncToSheets(true);
+  save();closeModal('ing-modal');renderIng();save();
 }
 function confirmDelIng(id){eIngId=id;deleteIngreso();}
-function deleteIngreso(){if(!confirm('¿Eliminar este ingreso?'))return;S.ingresos=S.ingresos.filter(x=>x.id!==eIngId);save();closeModal('ing-modal');renderIng();toast('Eliminado','ph-trash');syncToSheets(true);}
+function deleteIngreso(){if(!confirm('¿Eliminar este ingreso?'))return;S.ingresos=S.ingresos.filter(x=>x.id!==eIngId);save();closeModal('ing-modal');renderIng();toast('Eliminado','ph-trash');save();}
 
 // ═══════════════════════════════════════════════════
 //  VARIABLE CRUD
@@ -1723,10 +1743,10 @@ function saveVariable(){
   if(!valor){toast('Ingresa un valor','ph-warning');return;}
   if(eVarId!==null){const it=S.gastosVariables.find(x=>x.id===eVarId);it.mes=mes;it.cat=cat;it.valor=valor;it.desc=desc;it.fecha=fecha;toast('Gasto actualizado','ph-check-circle');}
   else{S.gastosVariables.push({id:nid(),mes,cat,valor,desc,fecha});toast('Gasto registrado','ph-check-circle');}
-  save();closeModal('var-modal');renderVar();syncToSheets(true);
+  save();closeModal('var-modal');renderVar();save();
 }
 function confirmDelVar(id){eVarId=id;deleteVariable();}
-function deleteVariable(){if(!confirm('¿Eliminar este gasto?'))return;S.gastosVariables=S.gastosVariables.filter(x=>x.id!==eVarId);save();closeModal('var-modal');renderVar();toast('Eliminado','ph-trash');syncToSheets(true);}
+function deleteVariable(){if(!confirm('¿Eliminar este gasto?'))return;S.gastosVariables=S.gastosVariables.filter(x=>x.id!==eVarId);save();closeModal('var-modal');renderVar();toast('Eliminado','ph-trash');save();}
 
 // ═══════════════════════════════════════════════════
 //  FIJO CRUD
@@ -1745,10 +1765,10 @@ function saveFijo(){
   if(!item){toast('Ingresa el nombre','ph-warning');return;}
   if(eFijId!==null){const it=S.gastosFijos.find(x=>x.id===eFijId);it.item=item;it.ubi=ubi;it.valor=valor;it.diaLimite=diaLimite;toast('Gasto fijo actualizado','ph-check-circle');}
   else{S.gastosFijos.push({id:nid(),item,ubi,valor,diaLimite});toast('Gasto fijo agregado','ph-check-circle');}
-  save();closeModal('fijo-modal');renderFij();syncToSheets(true);
+  save();closeModal('fijo-modal');renderFij();save();
 }
 function confirmDelFij(id){eFijId=id;deleteFijo();}
-function deleteFijo(){if(!confirm('¿Eliminar este gasto fijo?'))return;S.gastosFijos=S.gastosFijos.filter(x=>x.id!==eFijId);save();closeModal('fijo-modal');renderFij();toast('Eliminado','ph-trash');syncToSheets(true);}
+function deleteFijo(){if(!confirm('¿Eliminar este gasto fijo?'))return;S.gastosFijos=S.gastosFijos.filter(x=>x.id!==eFijId);save();closeModal('fijo-modal');renderFij();toast('Eliminado','ph-trash');save();}
 
 // ═══════════════════════════════════════════════════
 //  EXPORT FLOW
@@ -2325,6 +2345,21 @@ async function pullFromSheets(){
 }
 
 // ═══════════════════════════════════════════════════
+// FIREBASE AUTH + FIRESTORE
+let authMode='login';
+function setAuthMode(mode){authMode=mode;document.getElementById('auth-tab-login').classList.toggle('active',mode==='login');document.getElementById('auth-tab-register').classList.toggle('active',mode==='register');document.getElementById('auth-submit').innerHTML=mode==='login'?'<i class="ph ph-sign-in"></i>Ingresar':'<i class="ph ph-user-plus"></i>Crear cuenta';document.getElementById('auth-forgot-wrap').style.display=mode==='login'?'block':'none';document.getElementById('auth-register-help').style.display=mode==='register'?'block':'none';clearAuthError()}
+function showAuthError(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.style.display='block'}
+function clearAuthError(){const e=document.getElementById('auth-error');e.textContent='';e.style.display='none'}
+function authErrorMessage(err){const m={'auth/invalid-email':'El correo electrónico no es válido.','auth/user-not-found':'No existe una cuenta con ese correo.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/invalid-credential':'Correo o contraseña incorrectos.','auth/email-already-in-use':'Ese correo ya está registrado.','auth/weak-password':'La contraseña debe tener al menos 6 caracteres.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos.','auth/network-request-failed':'No hay conexión a Internet.','auth/operation-not-allowed':'Activa Email/Password en Firebase Authentication.'};return m[err?.code]||'No se pudo completar la operación.'}
+async function submitAuth(){clearAuthError();const email=document.getElementById('auth-email').value.trim().toLowerCase(),password=document.getElementById('auth-password').value;if(!email)return showAuthError('Ingresa tu correo electrónico.');if(password.length<6)return showAuthError('La contraseña debe tener al menos 6 caracteres.');const b=document.getElementById('auth-submit');b.disabled=true;try{if(authMode==='login')await firebaseAuth.signInWithEmailAndPassword(email,password);else await firebaseAuth.createUserWithEmailAndPassword(email,password)}catch(err){showAuthError(authErrorMessage(err))}finally{b.disabled=false}}
+async function resetAuthPassword(){const email=document.getElementById('auth-email').value.trim().toLowerCase();if(!email)return showAuthError('Escribe tu correo primero.');try{await firebaseAuth.sendPasswordResetEmail(email);showAuthError('Te enviamos el enlace de recuperación. Revisa tu correo.')}catch(err){showAuthError(authErrorMessage(err))}}
+async function logoutFirebase(){if(confirm('¿Quieres cerrar sesión?'))await firebaseAuth.signOut()}
+function updateFirebaseStatus(t){const e=document.getElementById('firebase-status-text');if(e)e.textContent=t}
+function updateFirebaseUserUI(){const email=firebaseCurrentUser?.email||S.profile?.email||'';const e=document.getElementById('settings-email-display');if(e)e.textContent=email||'Cuenta Firebase';const b=document.getElementById('firebase-user-badge');if(b)b.innerHTML='<i class="ph ph-cloud-check"></i><span>'+escapeHtml(email||'Cuenta autenticada')+' · Firebase</span>'}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+async function loadFirebaseData(user){firebaseCurrentUser=user;firebaseDataReady=false;try{const ref=firebaseDb.collection('users').doc(user.uid).collection('app').doc('data'),snap=await ref.get();let data=snap.exists?snap.data():null;if(data){delete data._updatedAt;delete data._schemaVersion;S=mergeState(DEF_STATE,data)}else{let legacy=null;try{legacy=JSON.parse(localStorage.getItem('finanzas2026_v2')||'null')}catch(_){}S=legacy?mergeState(DEF_STATE,legacy):clone(DEF_STATE);S.profile=S.profile||{};if(user.email&&!S.profile.email)S.profile.email=user.email;await ref.set({...clone(S),_schemaVersion:1,_createdAt:firebase.firestore.FieldValue.serverTimestamp(),_updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(legacy)localStorage.removeItem('finanzas2026_v2')}if(!S.profile)S.profile=clone(DEF_STATE.profile);if(!S.sheets)S.sheets=clone(DEF_STATE.sheets);if(!S.pagos)S.pagos={};if(!S.nu)S.nu=[];if(!S.nextNuId)S.nextNuId=200;if(!S.nextId)S.nextId=100;if(user.email)S.profile.email=user.email;firebaseDataReady=true;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.add('hidden');document.getElementById('main-shell').style.visibility='visible';updateFirebaseUserUI();applyTheme(S.theme||'dark');updatePill();loadProfile();renderDash();initDate();checkMensualReset();updateFirebaseStatus('Datos sincronizados ✓');checkShareTarget()}catch(err){console.error('[Firebase] load:',err);firebaseDataReady=false;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');showAuthError('No se pudieron cargar tus datos: '+(err.message||err))}}
+firebaseAuth.onAuthStateChanged(async user=>{if(user)await loadFirebaseData(user);else{firebaseCurrentUser=null;firebaseDataReady=false;document.getElementById('main-shell').style.visibility='hidden';document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('auth-password').value=''}})
+
 //  MISC
 // ═══════════════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -2337,12 +2372,7 @@ function toast(msg,icon='ph-check-circle'){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-function confirmReset(){
-  if(confirm('¿Restablecer todos los datos? Esta acción no se puede deshacer.')){
-    localStorage.removeItem('finanzas2026_v2');
-    location.reload();
-  }
-}
+async function confirmReset(){if(!confirm('¿Restablecer todos los datos? Esta acción no se puede deshacer.'))return;S=clone(DEF_STATE);if(firebaseCurrentUser?.email)S.profile.email=firebaseCurrentUser.email;await save();updatePill();loadProfile();renderPage(S.currentPage||'dashboard');renderDash();toast('Datos restablecidos ✓','ph-check-circle')}
 
 // ═══════════════════════════════════════════════════
 //  CAPTURA DE GASTOS DESDE TEXTO COMPARTIDO (SMS/notif)
@@ -2675,16 +2705,7 @@ function deleteNuMovimiento(){
   toast('Movimiento eliminado','ph-trash');
 }
 
-// ═══════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════
-applyTheme(S.theme||'dark');
-updatePill();
-loadProfile();
-renderDash();
-initDate();
-checkMensualReset();
-
+// INIT: Firebase Authentication controla cuándo se carga el estado.
 </script>
 </body>
 </html>
