@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0c1a2e" id="theme-meta">
+<meta name="theme-color" content="#f0f7fa" id="theme-meta">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finanzas">
@@ -20,6 +20,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics-compat.js"></script>
 <script>
 const firebaseConfig={apiKey:"AIzaSyBG3rfE0gBnB816utXgFqcqvrpa6Xz0-x8",authDomain:"finanzas-e04ef.firebaseapp.com",projectId:"finanzas-e04ef",storageBucket:"finanzas-e04ef.firebasestorage.app",messagingSenderId:"331577489242",appId:"1:331577489242:web:0b1065acd3b3de2eeb2563",measurementId:"G-V3Y1XRNL0G"};
@@ -29,6 +30,10 @@ const firebaseDb=firebase.firestore();
 if(firebaseConfig.measurementId)firebase.analytics();
 firebaseDb.enablePersistence({synchronizeTabs:true}).catch(err=>console.warn('[Firebase] Persistencia offline:',err.code||err.message));
 let firebaseCurrentUser=null,firebaseDataReady=false,firebaseSaveTimer=null;
+let firebaseMessaging=null, fcmToken=null, fcmReady=false;
+const FINANZAS_BASE_PATH='/Finanzas/';
+// Pega aquí la clave pública Web Push (VAPID) de Firebase cuando quieras activar las notificaciones push.
+const FIREBASE_VAPID_KEY='REEMPLAZAR_CON_TU_CLAVE_VAPID';
 </script>
 <style>
 /* ─── DARK THEME (default) ─────────────────────────── */
@@ -109,6 +114,39 @@ let firebaseCurrentUser=null,firebaseDataReady=false,firebaseSaveTimer=null;
   --teal-dim2:  rgba(14,116,144,0.18);
   --orange-dim: rgba(217,64,64,0.10);
   --orange-dim2:rgba(217,64,64,0.18);
+}
+
+/* ─── EMERALD THEME ─────────────────────────────────── */
+[data-theme="emerald"] {
+  --brand:        #059669;
+  --brand-dark:   #047857;
+  --brand-light:  #10b981;
+  --accent:       #dc5b4f;
+  --accent-dark:  #b94035;
+  --accent-light: #ef766b;
+  --bg:    #f2f8f5;
+  --bg2:   #ffffff;
+  --bg3:   #e7f3ed;
+  --bg4:   #d7ebe2;
+  --bg5:   #eaf5ef;
+  --border:   rgba(5,150,105,0.14);
+  --border2:  rgba(5,150,105,0.28);
+  --shadow:   0 4px 20px rgba(5,150,105,0.12);
+  --shadow-sm:0 2px 8px rgba(5,150,105,0.08);
+  --text:  #10251d;
+  --text2: #376254;
+  --text3: #6a9181;
+  --text4: #9ab7aa;
+  --input-bg:     #f7fcf9;
+  --input-border: rgba(5,150,105,0.28);
+  --nav-bg:  #ffffff;
+  --topbar-bg: #ffffff;
+  --metric-bg: #e7f3ed;
+  --card-bg:   #ffffff;
+  --teal-dim:   rgba(5,150,105,0.10);
+  --teal-dim2:  rgba(5,150,105,0.18);
+  --orange-dim: rgba(220,91,79,0.10);
+  --orange-dim2:rgba(220,91,79,0.18);
 }
 
 /* ─── BASE ─────────────────────────────────────────── */
@@ -373,6 +411,35 @@ select.form-input option{background:var(--bg3);}
 .dot-pulse{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
+/* ─── DASHBOARD INSIGHTS ───────────────────────────── */
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+.insight-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:13px 14px;min-width:0;}
+.insight-title{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.insight-title i{color:var(--brand);font-size:13px;}
+.insight-value{font-size:18px;font-weight:800;letter-spacing:-.4px;}
+.insight-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+.dashboard-chart-title{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+
+/* ─── AUTH LOGIN HERO ───────────────────────────────── */
+.auth-screen{background:linear-gradient(135deg,rgba(5,150,105,.08),rgba(6,182,212,.06)),url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;}
+.auth-screen::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,23,36,.55),rgba(4,23,36,.18));pointer-events:none;}
+.auth-card{position:relative;z-index:1;backdrop-filter:blur(12px);background:var(--card-bg);background:rgba(255,255,255,.94);}
+[data-theme=dark] .auth-card{background:rgba(15,35,55,.94);}
+[data-theme=emerald] .auth-card{background:rgba(255,255,255,.94);}
+
+/* ─── THEME PICKER ──────────────────────────────────── */
+.theme-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.theme-choice{border:1px solid var(--border);background:var(--card-bg);border-radius:12px;padding:11px 6px;color:var(--text2);font:700 11px Inter,sans-serif;cursor:pointer;text-align:center;}
+.theme-choice.active{border-color:var(--brand);color:var(--brand);background:var(--teal-dim);box-shadow:0 0 0 2px var(--teal-dim);}
+.theme-preview{width:28px;height:28px;border-radius:9px;margin:0 auto 6px;border:1px solid var(--border2);}
+.theme-preview.light{background:linear-gradient(135deg,#fff,#e8f4f8);}
+.theme-preview.dark{background:linear-gradient(135deg,#0c1a2e,#14304a);}
+.theme-preview.emerald{background:linear-gradient(135deg,#f2f8f5,#059669);}
+
+/* ─── PUSH NOTIFICATIONS ────────────────────────────── */
+.notif-options{display:none;padding:2px 2px 8px;}
+.notif-options.open{display:block;}
+.notif-note{font-size:10px;color:var(--text3);line-height:1.55;margin:0 4px 9px;}
 /* FIREBASE AUTH */
 .auth-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}.auth-screen.hidden{display:none}.auth-card{width:min(420px,100%);background:var(--card-bg);border:1px solid var(--border2);border-radius:20px;padding:24px;box-shadow:var(--shadow)}.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}.auth-brand-icon{width:48px;height:48px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,var(--brand-dark),var(--brand))}.auth-brand-icon img{width:100%;height:100%;object-fit:cover}.auth-brand h2{font-size:22px}.auth-brand h2 span{color:var(--brand-light)}.auth-subtitle{font-size:12px;color:var(--text3);margin-top:2px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:18px}.auth-tab{padding:9px;border:0;border-radius:8px;background:transparent;color:var(--text3);font:700 12px Inter,sans-serif;cursor:pointer}.auth-tab.active{background:var(--brand);color:#fff}.google-auth-btn{width:100%;height:42px;border:1px solid var(--border2);border-radius:10px;background:var(--card-bg);color:var(--text);font:700 12px Inter,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:.2s}.google-auth-btn:hover{border-color:var(--brand);transform:translateY(-1px)}.google-auth-btn i{font-size:18px}.google-auth-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}.legacy-import-note{background:var(--teal-dim);border:1px solid rgba(6,182,212,.22);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--text2);margin-top:12px}.legacy-import-note strong{color:var(--brand-light)}
 .auth-error{display:none;background:var(--orange-dim);border:1px solid rgba(224,82,82,.25);color:var(--accent-light);padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5;margin-bottom:12px}.auth-help{text-align:center;font-size:11px;color:var(--text3);margin-top:12px}.auth-link{border:0;background:none;color:var(--brand);font:600 11px Inter,sans-serif;cursor:pointer}.auth-loading{position:fixed;inset:0;z-index:1100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}.auth-loading.hidden{display:none}.auth-spinner{font-size:32px;color:var(--brand);animation:spin 1s linear infinite}.firebase-user-badge{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);margin:8px 0 12px}.firebase-user-badge i{color:var(--brand)}.drive-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}.drive-item:last-child{border-bottom:none}.drive-item:hover{background:var(--teal-dim)}.drive-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--teal-dim2);color:var(--brand)}.drive-item.folder .drive-icon{background:rgba(245,158,11,.13);color:#f59e0b}.drive-item.file .drive-icon{background:rgba(59,130,246,.13);color:#60a5fa}.drive-body{flex:1;min-width:0}.drive-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.drive-sub{font-size:10px;color:var(--text3);margin-top:2px}.drive-actions{display:flex;gap:4px}.drive-breadcrumbs{display:flex;align-items:center;gap:5px;overflow-x:auto;white-space:nowrap;padding:6px 0 10px;font-size:11px;color:var(--text3)}.drive-breadcrumbs button{border:0;background:none;color:var(--brand);font:600 11px Inter,sans-serif;cursor:pointer;padding:2px}.drive-empty{text-align:center;padding:24px 10px;color:var(--text3);font-size:12px}.drive-note{font-size:11px;color:var(--text3);line-height:1.6}.movement-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:4px}.movement-retiro{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.22)}.movement-fijo{background:var(--teal-dim);color:var(--brand);border:1px solid var(--border2)}
@@ -438,6 +505,11 @@ select.form-input option{background:var(--bg3);}
         <div class="card-header"><span class="card-title"><i class="ph ph-chart-bar"></i>Ingresos vs Gastos</span></div>
         <div class="chart-wrap" style="height:185px"><canvas id="chart-main"></canvas></div>
         <div class="legend-wrap" id="main-legend"></div>
+      </div>
+      <div class="insight-grid" id="dash-insights"></div>
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="ph ph-chart-line-up"></i>Tendencia de saldo</span></div>
+        <div class="chart-wrap" style="height:175px"><canvas id="chart-balance"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title"><i class="ph ph-chart-donut"></i>Gastos por categoría</span></div>
@@ -760,7 +832,7 @@ select.form-input option{background:var(--bg3);}
     <div class="settings-section-title">Automatización</div>
     <div class="settings-item" onclick="openSubPage('automation-page')">
       <div class="si-icon" style="background:rgba(155,127,244,0.15);"><i class="ph-fill ph-robot" style="color:#9b7ff4;"></i></div>
-      <div class="si-body"><div class="si-title">Capturar gastos automáticamente</div><div class="si-sub">Desde SMS o notificaciones bancarias</div></div>
+      <div class="si-body"><div class="si-title">Capturar gastos automáticamente</div><div class="si-sub">Importar gastos desde texto compartido · lectura automática pendiente</div></div>
       <div class="si-arrow"><i class="ph ph-caret-right"></i></div>
     </div>
 
@@ -819,14 +891,12 @@ select.form-input option{background:var(--bg3);}
   </div>
   <div class="sub-body">
     <div class="settings-section-title">Tema de la aplicación</div>
-    <div class="toggle-row">
-      <div class="toggle-label">
-        <i class="ph ph-moon" id="theme-icon"></i>
-        <span id="theme-label">Modo oscuro</span>
-      </div>
-      <button class="toggle-switch" id="theme-toggle" onclick="toggleTheme()"></button>
+    <div class="theme-picker">
+      <button class="theme-choice" id="theme-choice-light" onclick="setTheme('light')"><div class="theme-preview light"></div>☀️ Claro</button>
+      <button class="theme-choice" id="theme-choice-dark" onclick="setTheme('dark')"><div class="theme-preview dark"></div>🌙 Oscuro</button>
+      <button class="theme-choice" id="theme-choice-emerald" onclick="setTheme('emerald')"><div class="theme-preview emerald"></div>🌿 Esmeralda</button>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:16px;">Cambia entre el tema claro para uso diurno y el tema oscuro para ambientes con poca luz.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px;">El modo claro es el predeterminado para usuarios nuevos. Puedes cambiar de paleta cuando quieras.</p>
 
     <div class="settings-section-title">Preferencias</div>
     <div class="toggle-row">
@@ -834,8 +904,15 @@ select.form-input option{background:var(--bg3);}
         <i class="ph ph-bell" style="color:var(--brand);"></i>
         <span>Recordatorios de pago</span>
       </div>
-      <button class="toggle-switch on" id="notif-toggle" onclick="this.classList.toggle('on')"></button>
+      <button class="toggle-switch" id="notif-toggle" onclick="toggleNotifications()"></button>
     </div>
+    <div class="notif-options" id="notif-options">
+      <div class="notif-note" id="notif-status-note">Activa las notificaciones para recibir recordatorios de facturas pendientes.</div>
+      <div class="toggle-row"><div class="toggle-label"><i class="ph ph-clock-countdown"></i><span>5 días antes</span></div><button class="toggle-switch on" id="notif-5-toggle" onclick="toggleNotifRule('5')"></button></div>
+      <div class="toggle-row"><div class="toggle-label"><i class="ph ph-clock-countdown"></i><span>2 días antes</span></div><button class="toggle-switch on" id="notif-2-toggle" onclick="toggleNotifRule('2')"></button></div>
+      <div class="toggle-row"><div class="toggle-label"><i class="ph ph-warning-circle"></i><span>Día de vencimiento</span></div><button class="toggle-switch on" id="notif-0-toggle" onclick="toggleNotifRule('0')"></button></div>
+    </div>
+
     <div class="toggle-row">
       <div class="toggle-label">
         <i class="ph ph-cell-signal-full" style="color:var(--brand);"></i>
@@ -934,14 +1011,14 @@ select.form-input option{background:var(--bg3);}
   <div class="sub-body">
     <div style="text-align:center;padding:16px 0 10px;">
       <i class="ph-fill ph-chat-centered-text" style="font-size:48px;color:#9b7ff4;display:block;margin-bottom:8px;"></i>
-      <p style="font-size:15px;font-weight:700;margin-bottom:4px;">Pega el mensaje de tu banco</p>
+      <p style="font-size:15px;font-weight:700;margin-bottom:4px;">Importar mensaje de tu banco</p>
       <p style="font-size:12px;color:var(--text3);">Detectamos el valor y la fecha automáticamente</p>
     </div>
 
     <div class="card" style="margin-bottom:10px;background:var(--orange-dim);border-color:rgba(224,82,82,.22);">
       <div class="card-header"><span class="card-title"><i class="ph ph-info"></i>Por qué no es 100% automático</span></div>
       <div style="font-size:12px;color:var(--text2);line-height:1.7;">
-        <p style="margin-bottom:6px;">Una app web (PWA) no puede leer tus SMS o notificaciones del sistema por sí sola — ni iOS ni Android lo permiten, por seguridad (es la misma protección que bloquea el malware bancario).</p>
+        <p style="margin-bottom:6px;">La lectura automática de SMS/notificaciones bancarias queda pendiente. Por ahora puedes compartir o pegar el mensaje y Finanzas detectará valor, fecha y tipo.</p>
         <p>Lo más cercano y seguro: cuando llega la notificación de tu banco, la <strong>compartes</strong> a esta app con un toque, o la pegas aquí manualmente. Tarda 3 segundos.</p>
       </div>
     </div>
@@ -1118,7 +1195,7 @@ const CAT_ICONS=['ph-fork-knife','ph-shopping-cart-simple','ph-heart','ph-gradua
 
 const DEF_STATE={
   mesActivo:5,currentPage:'dashboard',
-  theme:'dark',
+  theme:'light',
   profile:{nombre:'',email:'',tel:'',ciudad:'Tunja',moneda:'COP'},
   sheets:{url:'https://script.google.com/macros/s/AKfycbypcuEy0riE5XM-1CpPkO8xya__WAaYbMcAbEUv9Gla5cVwgVxCc7nh9IjpQ8aBQ9Q/exec',id:'',connected:false},
   drive:{rootFolderId:'1cbVPEYkp2aBVZgVA_dFGhhqpAvUxgNT3',rootFolderName:'SERVICIOS',connected:false},
@@ -1310,24 +1387,20 @@ function calNextMonth(){
 
 
 function applyTheme(t){
+  if(!['light','dark','emerald'].includes(t))t='light';
   document.documentElement.setAttribute('data-theme',t);
   S.theme=t;
-  const isDark=t==='dark';
-  document.getElementById('theme-meta').setAttribute('content',isDark?'#0c1a2e':'#f0f7fa');
-  const tog=document.getElementById('theme-toggle');
-  if(tog)tog.classList.toggle('on',!isDark);
-  const lbl=document.getElementById('theme-label');
-  const ico=document.getElementById('theme-icon');
-  if(lbl)lbl.textContent=isDark?'Modo oscuro':'Modo claro';
-  if(ico)ico.className=isDark?'ph ph-moon':'ph ph-sun';
+  const colors={light:'#f0f7fa',dark:'#0c1a2e',emerald:'#f2f8f5'};
+  document.getElementById('theme-meta').setAttribute('content',colors[t]);
+  ['light','dark','emerald'].forEach(x=>{const b=document.getElementById('theme-choice-'+x);if(b)b.classList.toggle('active',t===x);});
   if(charts.main)renderChartMain();
   if(charts.cat)renderChartCat(S.mesActivo);
   if(charts.anual)renderRes();
+  if(charts.balance)renderChartBalance();
+  if(charts.mesDonut)renderResMes();
 }
-function toggleTheme(){
-  const newT=S.theme==='dark'?'light':'dark';
-  applyTheme(newT);save();
-}
+function setTheme(t){applyTheme(t);save();toast('Tema actualizado ✓','ph-palette');}
+function toggleTheme(){setTheme(S.theme==='dark'?'light':'dark');}
 
 // ═══════════════════════════════════════════════════
 //  NAVIGATION
@@ -1453,7 +1526,7 @@ function renderDash(){
       <div class="mval" style="color:var(--text2)">${fmt(fijM(m))}</div>
       <div class="msub">Variables: ${fmt(varM(m))}${retiroM(m)?` · Retiros: ${fmt(retiroM(m))}`:''}</div>
     </div>`;
-  renderChartMain();renderChartCat(m);renderPendientes(m);
+  renderChartMain();renderChartCat(m);renderChartBalance();renderDashInsights();renderPendientes(m);
   renderSyncBar();
 }
 
@@ -1475,6 +1548,29 @@ function renderChartMain(){
   document.getElementById('main-legend').innerHTML=`
     <div class="legend-row"><div class="legend-dot" style="background:#06b6d4"></div>Ingresos</div>
     <div class="legend-row"><div class="legend-dot" style="background:#e05252"></div>Gastos</div>`;
+}
+
+function renderChartBalance(){
+  const ctx=document.getElementById('chart-balance');
+  if(!ctx)return;
+  if(charts.balance)charts.balance.destroy();
+  const labels=MESES.map(m=>m.substring(0,3));
+  let acumulado=0;
+  const data=MESES.map((_,i)=>{acumulado+=ingM(i)-gasM(i);return acumulado;});
+  charts.balance=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Saldo acumulado',data,borderColor:'#059669',backgroundColor:'rgba(5,150,105,.10)',tension:.35,fill:true,pointRadius:3,pointBorderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtS(c.raw)}}},scales:{x:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:9,weight:'600'}}},y:{grid:{color:gridColor()},ticks:{color:tickColor(),font:{size:9},callback:v=>v===0?'0':fmtS(v)}}}}});
+}
+
+function renderDashInsights(){
+  const m=S.mesActivo, ing=ingM(m), fij=fijM(m), vrb=varM(m), gas=fij+vrb, sal=ing-gas;
+  const ahorro=ing?Math.round((sal/ing)*100):0;
+  const pend=S.gastosFijos.filter(f=>gPago(m,f.id)==='pendiente'&&f.valor>0);
+  const totalPend=pend.reduce((a,b)=>a+b.valor,0);
+  const top=[...CATS.map((c,i)=>({c,v:S.gastosVariables.filter(g=>g.mes===m&&g.cat===c).reduce((a,b)=>a+b.valor,0)}))].sort((a,b)=>b.v-a.v)[0];
+  document.getElementById('dash-insights').innerHTML=`
+    <div class="insight-card"><div class="insight-title"><i class="ph ph-percent"></i>Tasa de ahorro</div><div class="insight-value" style="color:${ahorro>=0?'var(--brand)':'var(--accent)'}">${ahorro}%</div><div class="insight-sub">De tus ingresos de ${MESES[m]}</div></div>
+    <div class="insight-card"><div class="insight-title"><i class="ph ph-calendar-check"></i>Pendiente por pagar</div><div class="insight-value c-accent">${fmt(totalPend)}</div><div class="insight-sub">${pend.length} factura${pend.length!==1?'s':''} pendiente${pend.length!==1?'s':''}</div></div>
+    <div class="insight-card"><div class="insight-title"><i class="ph ph-chart-bar"></i>Mayor categoría</div><div class="insight-value" style="font-size:16px;">${top?.c||'—'}</div><div class="insight-sub">${top?.v?fmt(top.v):'Sin gastos variables'}</div></div>
+    <div class="insight-card"><div class="insight-title"><i class="ph ph-house"></i>Fijos sobre ingresos</div><div class="insight-value">${ing?Math.round(fij/ing*100):0}%</div><div class="insight-sub">Variables: ${fmt(vrb)}</div></div>`;
 }
 
 function renderChartCat(m){
@@ -2402,10 +2498,79 @@ function updateFirebaseStatus(t){const e=document.getElementById('firebase-statu
 function updateFirebaseUserUI(){const email=firebaseCurrentUser?.email||S.profile?.email||'';const e=document.getElementById('settings-email-display');if(e)e.textContent=email||'Cuenta Firebase';const b=document.getElementById('firebase-user-badge');if(b)b.innerHTML='<i class="ph ph-cloud-check"></i><span>'+escapeHtml(email||'Cuenta autenticada')+' · Firebase</span>';updateLegacyImportUI()}
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 async function importLegacyLocalData(forceReplace=false){if(!firebaseCurrentUser||!firebaseDataReady){showAuthError('Primero inicia sesión en Firebase.');return false}const legacy=getLegacyLocalData();if(!legacy){toast('No se encontraron datos anteriores en este navegador','ph-info');updateLegacyImportUI();return false}const action=forceReplace?'reemplazar':'importar y combinar';if(!confirm('Se encontraron datos guardados anteriormente en este dispositivo. ¿Quieres '+action+' los datos actuales de Firebase?'))return false;try{const imported=mergeState(DEF_STATE,legacy);if(forceReplace)S=imported;else{S={...S, ...imported, profile:{...(S.profile||{}),...(imported.profile||{})}, sheets:{...(S.sheets||{}),...(imported.sheets||{})}, pagos:{...(S.pagos||{}),...(imported.pagos||{})}};if(Array.isArray(legacy.ingresos)&&legacy.ingresos.length)S.ingresos=legacy.ingresos;if(Array.isArray(legacy.gastosVariables)&&legacy.gastosVariables.length)S.gastosVariables=legacy.gastosVariables;if(Array.isArray(legacy.gastosFijos)&&legacy.gastosFijos.length)S.gastosFijos=legacy.gastosFijos;if(legacy.pagos&&typeof legacy.pagos==='object')S.pagos={...(S.pagos||{}),...legacy.pagos};if(Array.isArray(legacy.nu)&&legacy.nu.length)S.nu=legacy.nu;S.nextId=Math.max(Number(S.nextId||0),Number(legacy.nextId||0));S.nextNuId=Math.max(Number(S.nextNuId||0),Number(legacy.nextNuId||0))}if(firebaseCurrentUser.email&&!S.profile.email)S.profile.email=firebaseCurrentUser.email;await firebaseDb.collection('users').doc(firebaseCurrentUser.uid).collection('app').doc('data').set({...clone(S),_schemaVersion:1,_updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:false});firebaseDataReady=true;updateLegacyImportUI();updateFirebaseUserUI();updatePill();loadProfile();renderDash();renderPage(S.currentPage||'dashboard');toast('Datos anteriores importados correctamente ✓','ph-upload-simple');updateFirebaseStatus('Datos importados y sincronizados ✓');return true}catch(err){console.error('[Firebase] import legacy:',err);toast('No se pudieron importar los datos','ph-warning');updateFirebaseStatus('Error al importar datos');return false}}
-async function loadFirebaseData(user){firebaseCurrentUser=user;firebaseDataReady=false;try{const ref=firebaseDb.collection('users').doc(user.uid).collection('app').doc('data'),snap=await ref.get();let data=snap.exists?snap.data():null;const legacy=getLegacyLocalData();if(data){delete data._updatedAt;delete data._schemaVersion;S=mergeState(DEF_STATE,data);if(legacy)updateLegacyImportUI()}else{S=legacy?mergeState(DEF_STATE,legacy):clone(DEF_STATE);S.profile=S.profile||{};if(user.email&&!S.profile.email)S.profile.email=user.email;await ref.set({...clone(S),_schemaVersion:1,_createdAt:firebase.firestore.FieldValue.serverTimestamp(),_updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(legacy)toast('Tus datos anteriores fueron cargados automáticamente ✓','ph-upload-simple')}if(!S.profile)S.profile=clone(DEF_STATE.profile);if(!S.sheets)S.sheets=clone(DEF_STATE.sheets);if(!S.drive)S.drive=clone(DEF_STATE.drive);if(!S.pagos)S.pagos={};if(!S.nu)S.nu=[];if(!S.nextNuId)S.nextNuId=200;if(!S.nextId)S.nextId=100;if(user.email&&!S.profile.email)S.profile.email=user.email;(S.gastosVariables||[]).forEach(g=>{if(!g.movimientoTipo)g.movimientoTipo='gasto';if(!g.destinoTipo)g.destinoTipo=isRetiro(g)?'libre':'ninguno';if(g.destinoFijoId===undefined)g.destinoFijoId=null;if(g.pagoAsociadoAutomaticamente===undefined)g.pagoAsociadoAutomaticamente=false;});firebaseDataReady=true;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.add('hidden');document.getElementById('main-shell').style.visibility='visible';updateFirebaseUserUI();applyTheme(S.theme||'dark');updatePill();loadProfile();renderDash();initDate();checkMensualReset();updateFirebaseStatus('Datos sincronizados ✓');checkShareTarget()}catch(err){console.error('[Firebase] load:',err);firebaseDataReady=false;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');showAuthError('No se pudieron cargar tus datos: '+(err.message||err))}}
+async function loadFirebaseData(user){firebaseCurrentUser=user;firebaseDataReady=false;try{const ref=firebaseDb.collection('users').doc(user.uid).collection('app').doc('data'),snap=await ref.get();let data=snap.exists?snap.data():null;const legacy=getLegacyLocalData();if(data){delete data._updatedAt;delete data._schemaVersion;S=mergeState(DEF_STATE,data);if(legacy)updateLegacyImportUI()}else{S=legacy?mergeState(DEF_STATE,legacy):clone(DEF_STATE);S.profile=S.profile||{};if(user.email&&!S.profile.email)S.profile.email=user.email;await ref.set({...clone(S),_schemaVersion:1,_createdAt:firebase.firestore.FieldValue.serverTimestamp(),_updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(legacy)toast('Tus datos anteriores fueron cargados automáticamente ✓','ph-upload-simple')}if(!S.profile)S.profile=clone(DEF_STATE.profile);if(!S.sheets)S.sheets=clone(DEF_STATE.sheets);if(!S.drive)S.drive=clone(DEF_STATE.drive);if(!S.pagos)S.pagos={};if(!S.nu)S.nu=[];if(!S.nextNuId)S.nextNuId=200;if(!S.nextId)S.nextId=100;if(user.email&&!S.profile.email)S.profile.email=user.email;(S.gastosVariables||[]).forEach(g=>{if(!g.movimientoTipo)g.movimientoTipo='gasto';if(!g.destinoTipo)g.destinoTipo=isRetiro(g)?'libre':'ninguno';if(g.destinoFijoId===undefined)g.destinoFijoId=null;if(g.pagoAsociadoAutomaticamente===undefined)g.pagoAsociadoAutomaticamente=false;});firebaseDataReady=true;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.add('hidden');document.getElementById('main-shell').style.visibility='visible';updateFirebaseUserUI();applyTheme(S.theme||'dark');updatePill();loadProfile();renderDash();initDate();checkMensualReset();updateFirebaseStatus('Datos sincronizados ✓');initNotifications();checkPaymentReminders();checkShareTarget()}catch(err){console.error('[Firebase] load:',err);firebaseDataReady=false;document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');showAuthError('No se pudieron cargar tus datos: '+(err.message||err))}}
 setTimeout(updateLegacyImportUI,0);
 firebaseAuth.onAuthStateChanged(async user=>{if(user)await loadFirebaseData(user);else{firebaseCurrentUser=null;firebaseDataReady=false;document.getElementById('main-shell').style.visibility='hidden';document.getElementById('auth-loading').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('auth-password').value='';updateLegacyImportUI()}})
 
+
+// ═══════════════════════════════════════════════════
+//  PUSH NOTIFICATIONS — recordatorios de gastos fijos
+// ═══════════════════════════════════════════════════
+function notifState(){
+  if(!S.notifications)S.notifications={enabled:false,rules:{'5':true,'2':true,'0':true},lastSent:{}};
+  if(!S.notifications.rules)S.notifications.rules={'5':true,'2':true,'0':true};
+  if(!S.notifications.lastSent)S.notifications.lastSent={};
+  return S.notifications;
+}
+function updateNotifUI(){
+  const n=notifState();
+  const main=document.getElementById('notif-toggle');
+  const opts=document.getElementById('notif-options');
+  if(main)main.classList.toggle('on',!!n.enabled);
+  if(opts)opts.classList.toggle('open',!!n.enabled);
+  ['5','2','0'].forEach(k=>{const b=document.getElementById('notif-'+k+'-toggle');if(b)b.classList.toggle('on',n.rules[k]!==false);});
+  const note=document.getElementById('notif-status-note');
+  if(note)note.textContent=n.enabled?'Recordatorios activos para facturas pendientes. La app notificará 5 días antes, 2 días antes y el día del vencimiento.':'Activa las notificaciones para recibir recordatorios de facturas pendientes.';
+}
+async function requestPushPermission(){
+  if(!('Notification' in window)){toast('Este dispositivo/navegador no admite notificaciones web','ph-warning');return false;}
+  if(!('serviceWorker' in navigator)){toast('Este navegador no admite Service Worker','ph-warning');return false;}
+  if(FIREBASE_VAPID_KEY.startsWith('REEMPLAZAR')){toast('Falta configurar la clave VAPID de Firebase','ph-warning');return false;}
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){toast('Permiso de notificaciones no concedido','ph-warning');return false;}
+    const reg=await navigator.serviceWorker.ready;
+    if(!firebaseMessaging)firebaseMessaging=firebase.messaging();
+    fcmToken=await firebaseMessaging.getToken({vapidKey:FIREBASE_VAPID_KEY,serviceWorkerRegistration:reg});
+    if(!fcmToken)throw new Error('No se obtuvo token FCM');
+    await firebaseDb.collection('users').doc(firebaseCurrentUser.uid).collection('devices').doc(encodeURIComponent(fcmToken)).set({token:fcmToken,platform:navigator.platform||'',userAgent:navigator.userAgent,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    fcmReady=true;
+    return true;
+  }catch(err){console.error('[FCM]',err);toast('No se pudieron activar las notificaciones','ph-warning');return false;}
+}
+async function toggleNotifications(){
+  const n=notifState();
+  if(n.enabled){n.enabled=false;await save();updateNotifUI();toast('Notificaciones desactivadas','ph-bell-slash');return;}
+  const ok=await requestPushPermission();
+  if(!ok){updateNotifUI();return;}
+  n.enabled=true;await save();updateNotifUI();toast('Notificaciones activadas ✓','ph-bell-ringing');
+  checkPaymentReminders(true);
+}
+function toggleNotifRule(k){const n=notifState();n.rules[k]=n.rules[k]===false;save();updateNotifUI();}
+function daysUntilDue(year,month,day){
+  const due=new Date(year,month,Math.min(day,new Date(year,month+1,0).getDate()),23,59,59);
+  const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.ceil((due-today)/86400000);
+}
+function checkPaymentReminders(force=false){
+  const n=notifState();
+  if(!n.enabled||!fcmReady)return;
+  const now=new Date(),year=now.getFullYear(),month=now.getMonth();
+  S.gastosFijos.filter(f=>f.diaLimite&&f.valor>0&&gPago(month,f.id)==='pendiente').forEach(f=>{
+    const days=daysUntilDue(year,month,f.diaLimite);
+    const rule=String(days);
+    if(!n.rules[rule])return;
+    const key=`${year}-${month}-${f.id}-${rule}`;
+    if(!force&&n.lastSent[key])return;
+    // El envío real lo hace FCM/Cloud Functions; aquí dejamos registrada la alerta pendiente de envío.
+    n.lastSent[key]=new Date().toISOString();
+  });
+  save();
+}
+function initNotifications(){
+  notifState();updateNotifUI();
+  if(firebaseMessaging)firebaseMessaging.onMessage(payload=>{toast(payload?.notification?.title||'Nuevo recordatorio', 'ph-bell-ringing');});
+}
 
 //  MISC
 // ═══════════════════════════════════════════════════
@@ -2522,13 +2687,14 @@ function checkShareTarget(){
     openSubPage('automation-page');
     document.getElementById('sms-paste').value=shared;
     parseSMS();
-    history.replaceState({},'',location.pathname);
+    history.replaceState({},'',FINANZAS_BASE_PATH);
   }
 }
 
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.getElementById('install-banner').classList.add('visible');});
 function installApp(){if(!deferredInstall)return;deferredInstall.prompt();deferredInstall.userChoice.then(()=>{deferredInstall=null;document.getElementById('install-banner').classList.remove('visible');});}
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator){navigator.serviceWorker.register(FINANZAS_BASE_PATH+'sw.js',{scope:FINANZAS_BASE_PATH}).catch(err=>console.warn('[PWA] Service Worker:',err));}
+if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true){document.getElementById('install-banner')?.classList.remove('visible');}
 checkShareTarget();
 
 // Pre-fill default Sheets URL on first load if not yet connected

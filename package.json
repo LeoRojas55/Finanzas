@@ -1,0 +1,16 @@
+{
+  "name": "finanzas-functions",
+  "description": "Cloud Functions para Finanzas 2026",
+  "scripts": {
+    "lint": "echo 'lint not configured'"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "latest",
+    "firebase-functions": "latest"
+  },
+  "private": true
+}
